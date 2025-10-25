@@ -13,6 +13,8 @@ import Dashboard from './pages/Dashboard';
 import Profiles from './pages/Profiles';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import ResetPassword from './pages/Auth/ResetPassword';
 
 // Import axios config
 import './utils/axios';
@@ -29,6 +31,8 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot" element={<ForgotPassword />} />
+              <Route path="/reset/:token" element={<ResetPassword />} />
 
               {/* Protected Routes */}
               <Route 
