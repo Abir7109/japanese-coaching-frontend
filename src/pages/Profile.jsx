@@ -83,14 +83,14 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-ivory flex items-center justify-center">
+      <div className="min-h-screen bg-ivory dark:bg-night flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-teal"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-ivory py-12">
+    <div className="min-h-screen bg-ivory dark:bg-night py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="card mb-8 bg-gradient-to-r from-teal to-ocean text-white">
@@ -126,7 +126,7 @@ const Profile = () => {
         {/* Profile Form */}
         <div className="card">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-ocean">Profile Information</h2>
+              <h2 className="text-2xl font-bold text-ocean dark:text-sand">Profile Information</h2>
             {!editing && (
               <button onClick={() => setEditing(true)} className="btn-primary">
                 Edit Profile
@@ -138,13 +138,14 @@ const Profile = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Avatar */}
               <div>
-                <h3 className="text-lg font-semibold text-ocean mb-2">Profile Picture</h3>
+                <h3 className="text-lg font-semibold text-ocean dark:text-sand mb-2">
+e Picture</h3>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <label className="relative w-24 h-24 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-aqua cursor-pointer group">
                     {user?.avatar || avatarPreview ? (
                       <img src={avatarPreview || user?.avatar} alt="avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-ivory flex items-center justify-center text-ocean">No Image</div>
+                      <div className="w-full h-full bg-ivory dark:bg-night flex items-center justify-center text-ocean dark:text-sand">No Image</div>
                     )}
                     <input type="file" accept="image/*" className="hidden" onChange={(e)=>{
                       const f = e.target.files?.[0];
@@ -211,7 +212,7 @@ const Profile = () => {
 
               {/* Japanese Level */}
               <div>
-                <label className="block text-sm font-medium text-ocean mb-2">
+                <label className="block text-sm font-medium text-ocean dark:text-sand mb-2">
                   Japanese Level
                 </label>
                 <select
@@ -230,10 +231,10 @@ const Profile = () => {
 
               {/* Social Links */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-ocean">Social Links</h3>
+                <h3 className="text-lg font-semibold text-ocean dark:text-sand">Social Links</h3>
                 
                 <div>
-                  <label className="block text-sm font-medium text-ocean mb-2">
+                  <label className="block text-sm font-medium text-ocean dark:text-sand mb-2">
                     Facebook
                   </label>
                   <input
@@ -247,7 +248,7 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-ocean mb-2">
+                  <label className="block text-sm font-medium text-ocean dark:text-sand mb-2">
                     WhatsApp (Phone Number)
                   </label>
                   <input
@@ -261,7 +262,7 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-ocean mb-2">
+                  <label className="block text-sm font-medium text-ocean dark:text-sand mb-2">
                     Instagram
                   </label>
                   <input
@@ -275,7 +276,7 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-ocean mb-2">
+                  <label className="block text-sm font-medium text-ocean dark:text-sand mb-2">
                     Twitter
                   </label>
                   <input
@@ -310,15 +311,15 @@ const Profile = () => {
             <div className="space-y-6">
               {/* Display Bio */}
               <div>
-                <h3 className="text-sm font-medium text-ocean mb-2">Bio</h3>
-                <p className="text-gray-600">
+                <h3 className="text-sm font-medium text-ocean dark:text-sand mb-2">Bio</h3>
+                <p className="text-gray-600 dark:text-sand/80">
                   {profile?.bio || 'No bio added yet'}
                 </p>
               </div>
 
               {/* Display Level */}
               <div>
-                <h3 className="text-sm font-medium text-ocean mb-2">Japanese Level</h3>
+                <h3 className="text-sm font-medium text-ocean dark:text-sand mb-2">Japanese Level</h3>
                 <span className="inline-block px-3 py-1 bg-teal text-white rounded-full text-sm font-medium">
                   {profile?.japaneseLevel?.charAt(0).toUpperCase() + profile?.japaneseLevel?.slice(1)}
                 </span>
@@ -326,40 +327,40 @@ const Profile = () => {
 
               {/* Display Progress */}
               <div>
-                <h3 className="text-sm font-medium text-ocean mb-4">Progress</h3>
+                <h3 className="text-sm font-medium text-ocean dark:text-sand mb-4">Progress</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-ivory rounded-lg text-center">
+                  <div className="p-4 bg-ivory dark:bg-steel rounded-lg text-center">
                     <p className="text-3xl font-bold text-teal">{profile?.progress?.lessonsCompleted || 0}</p>
-                    <p className="text-sm text-gray-600">Lessons Completed</p>
+                    <p className="text-sm text-gray-600 dark:text-sand/70">Lessons Completed</p>
                   </div>
-                  <div className="p-4 bg-ivory rounded-lg text-center">
+                  <div className="p-4 bg-ivory dark:bg-steel rounded-lg text-center">
                     <p className="text-3xl font-bold text-ocean">{profile?.progress?.currentStreak || 0}</p>
-                    <p className="text-sm text-gray-600">Day Streak 🔥</p>
+                    <p className="text-sm text-gray-600 dark:text-sand/70">Day Streak 🔥</p>
                   </div>
                 </div>
               </div>
 
               {/* Display Social Links */}
               <div>
-                <h3 className="text-sm font-medium text-ocean mb-2">Social Links</h3>
+                <h3 className="text-sm font-medium text-ocean dark:text-sand mb-2">Social Links</h3>
                 <div className="flex gap-3">
                   {profile?.socialLinks?.facebook && (
-                    <a href={profile.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-teal hover:text-ocean">
+                    <a href={profile.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-teal dark:text-khaki hover:text-ocean dark:hover:text-sand">
                       Facebook
                     </a>
                   )}
                   {profile?.socialLinks?.whatsapp && (
-                    <a href={`https://wa.me/${profile.socialLinks.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-teal hover:text-ocean">
+                    <a href={`https://wa.me/${profile.socialLinks.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-teal dark:text-khaki hover:text-ocean dark:hover:text-sand">
                       WhatsApp
                     </a>
                   )}
                   {profile?.socialLinks?.instagram && (
-                    <a href={profile.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-teal hover:text-ocean">
+                    <a href={profile.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-teal dark:text-khaki hover:text-ocean dark:hover:text-sand">
                       Instagram
                     </a>
                   )}
                   {profile?.socialLinks?.twitter && (
-                    <a href={profile.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-teal hover:text-ocean">
+                    <a href={profile.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-teal dark:text-khaki hover:text-ocean dark:hover:text-sand">
                       Twitter
                     </a>
                   )}
