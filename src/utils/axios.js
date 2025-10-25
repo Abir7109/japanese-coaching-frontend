@@ -33,7 +33,10 @@ axios.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Use HashRouter-friendly redirect to avoid 404 on GitHub Pages
+      if (window?.location) {
+        window.location.hash = '#/login';
+      }
     }
     return Promise.reject(error);
   }
