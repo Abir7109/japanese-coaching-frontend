@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import AttendanceBoard from '../components/Admin/AttendanceBoard';
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -96,6 +97,11 @@ const Admin = () => {
             </p>
             <p className="text-gray-600">Teachers & Admins</p>
           </div>
+        </div>
+
+        {/* Attendance Board */}
+        <div className="mb-8">
+          <AttendanceBoard />
         </div>
 
         {/* Users Table */}
