@@ -8,7 +8,6 @@ const AttendanceBoard = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
 
   const fetchData = async () => {
     try {
@@ -63,15 +62,7 @@ const AttendanceBoard = () => {
           <h2 className="text-2xl font-bold text-ocean">🗂️ Attendance Board (Today)</h2>
           <p className="text-sm text-gray-600">Marked: {todayRecords.length} / {users.filter(u=>u.role==='student').length}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            value={query}
-            onChange={(e)=>setQuery(e.target.value)}
-            placeholder="Search student name/email"
-            className="input-field w-64"
-          />
-          <button onClick={fetchData} className="btn-secondary">Refresh</button>
-        </div>
+        <button onClick={fetchData} className="btn-secondary">Refresh</button>
       </div>
 
       {error && (
@@ -91,7 +82,6 @@ const AttendanceBoard = () => {
           <tbody>
             {users
               .filter(u => u.role === 'student')
-              .filter(u => (u.name + ' ' + u.email).toLowerCase().includes(query.toLowerCase()))
               .map((u) => {
                 const rec = recordMap.get(u._id);
                 const p = profileMap.get(u._id);
