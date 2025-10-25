@@ -139,40 +139,57 @@ const Profile = () => {
               {/* Avatar */}
               <div>
                 <h3 className="text-lg font-semibold text-ocean mb-2">Profile Picture</h3>
-                <div className="flex items-center gap-4">
-                  {user?.avatar || avatarPreview ? (
-                    <img src={avatarPreview || user?.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover border-2 border-aqua" />
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-ivory border-2 border-aqua flex items-center justify-center text-ocean">No Image</div>
-                  )}
-                  <div className="space-y-2">
-                    <input type="file" accept="image/*" onChange={(e)=>{
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <label className="relative w-24 h-24 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-aqua cursor-pointer group">
+                    {user?.avatar || avatarPreview ? (
+                      <img src={avatarPreview || user?.avatar} alt="avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-ivory flex items-center justify-center text-ocean">No Image</div>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e)=>{
                       const f = e.target.files?.[0];
                       if (f) {
                         setAvatarFile(f);
                         setAvatarPreview(URL.createObjectURL(f));
                       }
                     }} />
-                    <div className="text-sm text-gray-500">or paste image URL</div>
-                    <input value={avatarUrl} onChange={(e)=>setAvatarUrl(e.target.value)} placeholder="https://example.com/pic.jpg" className="input-field w-full" />
-                    <button type="button" className="btn-secondary" onClick={async ()=>{
-                      if (!avatarFile && !avatarUrl) return alert('Choose a file or enter a URL');
-                      const id = user?.id || user?._id;
-                      try {
-                        if (avatarFile) {
-                          const fd = new FormData();
-                          fd.append('avatar', avatarFile);
-                          const res = await axios.post(`/api/users/${id}/avatar`, fd);
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-end justify-center transition-opacity">
+                      <span className="text-white text-xs mb-2">Tap to change</span>
+                    </div>
+                  </label>
+
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <button type="button" className="btn-secondary" onClick={()=>{
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = (e)=>{
+                          const f = e.target.files?.[0];
+                          if (f) { setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)); }
+                        };
+                        input.click();
+                      }}>Choose Photo</button>
+                      <button type="button" className="btn-primary" onClick={async ()=>{
+                        if (!avatarFile && !avatarUrl) return alert('Choose a file or enter a URL');
+                        const id = user?.id || user?._id;
+                        try {
+                          if (avatarFile) {
+                            const fd = new FormData();
+                            fd.append('avatar', avatarFile);
+                            await axios.post(`/api/users/${id}/avatar`, fd);
+                          } else if (avatarUrl) {
+                            await axios.post(`/api/users/${id}/avatar`, { url: avatarUrl });
+                          }
                           window.location.reload();
-                        } else if (avatarUrl) {
-                          await axios.post(`/api/users/${id}/avatar`, { url: avatarUrl });
-                          window.location.reload();
+                        } catch (e) {
+                          alert(e.response?.data?.message || 'Failed to update avatar');
                         }
-                      } catch (e) {
-                        alert(e.response?.data?.message || 'Failed to update avatar');
-                      }
-                    }}>Upload Avatar</button>
-                    <p className="text-xs text-gray-500">Note: Images are not stored in GitHub. For file upload, backend uses Cloudinary if configured; otherwise use URL.</p>
+                      }}>Save Photo</button>
+                    </div>
+                    <div className="text-sm text-gray-500">Or paste an image URL</div>
+                    <input value={avatarUrl} onChange={(e)=>setAvatarUrl(e.target.value)} placeholder="https://example.com/pic.jpg" className="input-field w-full" />
+                    <p className="text-xs text-gray-500">Tip: On mobile, tap the photo or Choose Photo to open your camera/gallery.</p>
                   </div>
                 </div>
               </div>
