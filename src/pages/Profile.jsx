@@ -17,6 +17,9 @@ const Profile = () => {
       twitter: ''
     }
   });
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -129,6 +132,47 @@ const Profile = () => {
 
           {editing ? (
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Avatar */}
+              <div>
+                <h3 className="text-lg font-semibold text-ocean mb-2">Profile Picture</h3>
+                <div className="flex items-center gap-4">
+                  {user?.avatar || avatarPreview ? (
+                    <img src={avatarPreview || user?.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover border-2 border-aqua" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-ivory border-2 border-aqua flex items-center justify-center text-ocean">No Image</div>
+                  )}
+                  <div className="space-y-2">
+                    <input type="file" accept="image/*" onChange={(e)=>{
+                      const f = e.target.files?.[0];
+                      if (f) {
+                        setAvatarFile(f);
+                        setAvatarPreview(URL.createObjectURL(f));
+                      }
+                    }} />
+                    <div className="text-sm text-gray-500">or paste image URL</div>
+                    <input value={avatarUrl} onChange={(e)=>setAvatarUrl(e.target.value)} placeholder="https://example.com/pic.jpg" className="input-field w-full" />
+                    <button type="button" className="btn-secondary" onClick={async ()=>{
+                      if (!avatarFile && !avatarUrl) return alert('Choose a file or enter a URL');
+                      const id = user?.id || user?._id;
+                      try {
+                        if (avatarFile) {
+                          const fd = new FormData();
+                          fd.append('avatar', avatarFile);
+                          const res = await axios.post(`/api/users/${id}/avatar`, fd);
+                          window.location.reload();
+                        } else if (avatarUrl) {
+                          await axios.post(`/api/users/${id}/avatar`, { url: avatarUrl });
+                          window.location.reload();
+                        }
+                      } catch (e) {
+                        alert(e.response?.data?.message || 'Failed to update avatar');
+                      }
+                    }}>Upload Avatar</button>
+                    <p className="text-xs text-gray-500">Note: Images are not stored in GitHub. For file upload, backend uses Cloudinary if configured; otherwise use URL.</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Bio */}
               <div>
                 <label className="block text-sm font-medium text-ocean mb-2">

@@ -46,9 +46,13 @@ const Header = () => {
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <Link to="/profile" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-                  <div className="w-8 h-8 bg-gradient-to-r from-aqua to-teal rounded-full flex items-center justify-center text-white font-semibold">
-                    {user?.name?.charAt(0).toUpperCase()}
-                  </div>
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user?.name} className="w-8 h-8 rounded-full object-cover border-2 border-aqua" />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-r from-aqua to-teal rounded-full flex items-center justify-center text-white font-semibold">
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <span className="text-ocean font-medium">{user?.name}</span>
                 </Link>
                 <button onClick={handleLogout} className="btn-primary">
