@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-ivory text-ocean font-sans antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-teal hover:bg-ocean text-white font-medium py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply bg-aqua hover:bg-teal text-white font-medium py-2 px-6 rounded-lg transition-all duration-300;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-2 border-2 border-aqua rounded-lg focus:outline-none focus:border-teal transition-colors;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-teal to-ocean bg-clip-text text-transparent;
+  }
+}
