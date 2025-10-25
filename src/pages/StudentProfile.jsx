@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 function Stat({ label, value, sub }) {
   return (
@@ -30,11 +31,60 @@ function CircleProgress({ percent=0, size=96, stroke=10, trackColor='#e5e7eb', b
 
 const tabs = ['Overview','Courses','Achievements','Activity','Settings'];
 
+function AdminAcademicEditor({ profile, onUpdated }) {
+  const [gpa, setGpa] = useState(profile?.academic?.gpa ?? 0);
+  const [grades, setGrades] = useState(profile?.academic?.grades ?? []);
+  const [saving, setSaving] = useState(false);
+
+  const addRow = () => setGrades([...grades, { course: '', score: 0, letter: 'N/A', completed: false }]);
+  const updateRow = (i, patch) => setGrades(grades.map((g,idx)=> idx===i ? { ...g, ...patch } : g));
+  const removeRow = (i) => setGrades(grades.filter((_,idx)=> idx!==i));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const userId = profile?.user?._id;
+      const res = await axios.put(`/api/profiles/${userId}/admin`, { academic: { gpa: Number(gpa), grades } });
+      onUpdated(res.data.profile);
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to save academic data');
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="p-4 rounded-lg bg-ivory dark:bg-steel">
+      <div className="flex items-center justify-between mb-3">
+        <div className="font-semibold text-ocean dark:text-sand">Admin: Edit Academic</div>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? 'Saving…' : 'Save'}</button>
+      </div>
+      <div className="grid sm:grid-cols-4 gap-3 items-end mb-4">
+        <label className="sm:col-span-1 text-sm text-ocean dark:text-sand">GPA
+          <input type="number" step="0.01" min="0" max="4" value={gpa} onChange={e=>setGpa(e.target.value)} className="input-field mt-1" />
+        </label>
+      </div>
+      <div className="space-y-2">
+        {grades.map((g,idx)=> (
+          <div key={idx} className="grid sm:grid-cols-12 gap-2 items-end">
+            <input className="input-field sm:col-span-4" placeholder="Course" value={g.course} onChange={e=>updateRow(idx,{course:e.target.value})} />
+            <input type="number" className="input-field sm:col-span-2" placeholder="Score" value={g.score} onChange={e=>updateRow(idx,{score:Number(e.target.value)})} />
+            <input className="input-field sm:col-span-3" placeholder="Letter" value={g.letter} onChange={e=>updateRow(idx,{letter:e.target.value})} />
+            <label className="sm:col-span-2 text-sm text-ocean dark:text-sand flex items-center gap-2"><input type="checkbox" checked={g.completed} onChange={e=>updateRow(idx,{completed:e.target.checked})}/> Completed</label>
+            <button type="button" onClick={()=>removeRow(idx)} className="sm:col-span-1 text-red-500 hover:text-red-700">Remove</button>
+          </div>
+        ))}
+        <button type="button" onClick={addRow} className="btn-secondary">Add Course</button>
+      </div>
+    </div>
+  );
+}
+
 export default function StudentProfile() {
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState('Overview');
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [compare, setCompare] = useState(false);
   const [rankInfo, setRankInfo] = useState(null);
 
@@ -134,7 +184,7 @@ export default function StudentProfile() {
           {/* Quick Stats */}
           <div className="card">
             <div className="grid grid-cols-2 gap-4">
-              <Stat label="Performance (GPA)" value={perf} sub="0.00 – 4.00" />
+              <Stat label="Performance (GPA)" value={(profile?.academic?.gpa ?? perf)} sub="0.00 – 4.00" />
               <Stat label="Attendance" value={`${attendance}%`} sub="last 30 days" />
               <div className="p-4 rounded-xl bg-ivory dark:bg-steel shadow-sm flex items-center gap-4">
                 <CircleProgress percent={coursePct} />
@@ -205,15 +255,19 @@ export default function StudentProfile() {
 
             {active === 'Courses' && (
               <div className="space-y-3">
-                {[1,2,3].map(i=> (
-                  <div key={i} className="p-4 rounded-lg bg-ivory dark:bg-steel flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold text-ocean dark:text-sand">Course {i}</div>
-                      <div className="text-sm text-gray-500 dark:text-sand/70">Completion: {coursePct - i*5}%</div>
+                {(profile?.academic?.grades?.length ? profile.academic.grades : [{course:'Core A',score:75,letter:'B',completed:false}]).map((g,idx)=> (
+                  <div key={idx} className="p-4 rounded-lg bg-ivory dark:bg-steel flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="font-semibold text-ocean dark:text-sand">{g.course}</div>
+                      <div className="text-sm text-gray-500 dark:text-sand/70">Score: {g.score} • Grade: {g.letter} • {g.completed ? 'Completed' : 'In progress'}</div>
                     </div>
-                    <CircleProgress percent={Math.max(0, coursePct - i*5)} size={64} stroke={8} barColor="#948979" />
+                    <CircleProgress percent={Math.max(0, Math.min(100, g.score))} size={64} stroke={8} barColor="#948979" />
                   </div>
                 ))}
+
+                {isAdmin && (
+                  <AdminAcademicEditor profile={profile} onUpdated={setProfile} />
+                )}
               </div>
             )}
 
