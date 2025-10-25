@@ -3,19 +3,23 @@ import axios from 'axios';
 
 const AttendanceBoard = () => {
   const [users, setUsers] = useState([]);
+  const [profiles, setProfiles] = useState([]);
   const [todayRecords, setTodayRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [usersRes, todayRes] = await Promise.all([
+      const [usersRes, profilesRes, todayRes] = await Promise.all([
         axios.get('/api/users'),
+        axios.get('/api/profiles'),
         axios.get('/api/attendance/today')
       ]);
       setUsers(usersRes.data.users || []);
+      setProfiles(profilesRes.data.profiles || []);
       setTodayRecords(todayRes.data.records || []);
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to load attendance data');
@@ -29,6 +33,7 @@ const AttendanceBoard = () => {
   }, []);
 
   const recordMap = new Map(todayRecords.map(r => [r.user?._id, r]));
+  const profileMap = new Map(profiles.map(p => [p.user?._id, p]));
 
   const mark = async (userId, incrementLesson) => {
     try {
@@ -54,8 +59,19 @@ const AttendanceBoard = () => {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-ocean">🗂️ Attendance Board (Today)</h2>
-        <button onClick={fetchData} className="btn-secondary">Refresh</button>
+        <div>
+          <h2 className="text-2xl font-bold text-ocean">🗂️ Attendance Board (Today)</h2>
+          <p className="text-sm text-gray-600">Marked: {todayRecords.length} / {users.filter(u=>u.role==='student').length}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            value={query}
+            onChange={(e)=>setQuery(e.target.value)}
+            placeholder="Search student name/email"
+            className="input-field w-64"
+          />
+          <button onClick={fetchData} className="btn-secondary">Refresh</button>
+        </div>
       </div>
 
       {error && (
@@ -75,11 +91,15 @@ const AttendanceBoard = () => {
           <tbody>
             {users
               .filter(u => u.role === 'student')
+              .filter(u => (u.name + ' ' + u.email).toLowerCase().includes(query.toLowerCase()))
               .map((u) => {
                 const rec = recordMap.get(u._id);
+                const p = profileMap.get(u._id);
                 return (
                   <tr key={u._id} className="border-b border-gray-200 hover:bg-ivory">
-                    <td className="py-3 px-4 font-medium text-ocean">{u.name}</td>
+                    <td className="py-3 px-4 font-medium text-ocean">{u.name}
+                      <div className="text-xs text-gray-500">Lessons: {p?.progress?.lessonsCompleted ?? 0} • Streak: {p?.progress?.currentStreak ?? 0}</div>
+                    </td>
                     <td className="py-3 px-4 text-gray-600">{u.email}</td>
                     <td className="py-3 px-4">
                       {rec ? (
@@ -91,11 +111,11 @@ const AttendanceBoard = () => {
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          disabled={submitting}
+                          disabled={submitting || !!rec}
                           onClick={() => mark(u._id, false)}
-                          className="btn-secondary"
+                          className={`btn-secondary ${rec ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                          Mark Present
+                          {rec ? 'Marked' : 'Mark Present'}
                         </button>
                         <button
                           disabled={submitting}
