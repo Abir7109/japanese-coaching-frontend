@@ -28,9 +28,13 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="card mb-8 bg-gradient-to-r from-teal to-ocean text-white">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-ocean text-2xl font-bold shadow-lg">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
+            {user?.avatar ? (
+              <img src={user.avatar} alt={user?.name} className="w-16 h-16 rounded-full object-cover border-2 border-aqua shadow-lg bg-white" />
+            ) : (
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-ocean text-2xl font-bold shadow-lg">
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div>
               <h1 className="text-3xl font-bold">Welcome back, {user?.name}! 🌸</h1>
               <p className="text-aqua mt-1">Ready to continue your Japanese learning journey?</p>
