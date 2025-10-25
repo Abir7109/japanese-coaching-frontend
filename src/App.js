@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Profiles from './pages/Profiles';
 import Profile from './pages/Profile';
+import StudentProfile from './pages/StudentProfile';
 import Admin from './pages/Admin';
 import ForgotPassword from './pages/Auth/ForgotPassword';
 import ResetPassword from './pages/Auth/ResetPassword';
@@ -48,6 +49,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Profiles />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profiles/:id" 
+                element={
+                  <ProtectedRoute>
+                    <StudentProfile />
                   </ProtectedRoute>
                 } 
               />

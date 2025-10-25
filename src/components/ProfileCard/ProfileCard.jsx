@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const ProfileCard = ({ profile }) => {
   const { user, bio, japaneseLevel, socialLinks, progress } = profile;
@@ -24,7 +25,8 @@ const ProfileCard = ({ profile }) => {
   const avatarClass = roleStyles[user?.role || 'student'];
 
   return (
-    <div className="card hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden">
+    <Link to={`/profiles/${user?._id}`} className="block">
+      <div className="card hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden">
       {/* Role badge */}
       <div className="absolute top-3 right-3 text-xs px-2 py-1 rounded-full bg-ocean text-white shadow">
         {badge}
@@ -90,7 +92,8 @@ const ProfileCard = ({ profile }) => {
           </a>
         )}
       </div>
-    </div>
+      </div>
+    </Link>
   );
 };
 
