@@ -71,7 +71,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-ivory py-12">
+    <div className="min-h-screen bg-ivory dark:bg-night py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">

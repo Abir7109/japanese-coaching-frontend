@@ -6,11 +6,11 @@ const Home = () => {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen bg-ivory">
+    <div className="min-h-screen bg-ivory dark:bg-night">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center">
+          <div className="text-center text-ocean dark:text-sand">
             <h1 className="text-5xl md:text-6xl font-bold text-ocean mb-6">
               🌸 日本語コーチング
             </h1>
@@ -49,9 +49,9 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="bg-white py-20">
+      <section className="bg-white dark:bg-steel py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-center text-ocean mb-12">
+          <h2 className="text-4xl font-bold text-center text-ocean dark:text-sand mb-12">
             Why Choose Us?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

@@ -6,30 +6,30 @@
 
 @layer base {
   body {
-    @apply bg-ivory text-ocean font-sans antialiased;
+    @apply bg-ivory text-ocean dark:bg-night dark:text-sand font-sans antialiased;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-teal hover:bg-ocean text-white font-medium py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg;
+.btn-primary {
+    @apply bg-teal hover:bg-ocean text-white font-medium py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg dark:bg-khaki dark:hover:bg-sand dark:text-night;
   }
   
-  .btn-secondary {
-    @apply bg-aqua hover:bg-teal text-white font-medium py-2 px-6 rounded-lg transition-all duration-300;
+.btn-secondary {
+    @apply bg-aqua hover:bg-teal text-white font-medium py-2 px-6 rounded-lg transition-all duration-300 dark:bg-steel dark:hover:bg-khaki dark:text-sand;
   }
   
-  .card {
-    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6;
+.card {
+    @apply bg-white dark:bg-steel dark:text-sand rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6;
   }
   
-  .input-field {
-    @apply w-full px-4 py-2 border-2 border-aqua rounded-lg focus:outline-none focus:border-teal transition-colors;
+.input-field {
+    @apply w-full px-4 py-2 border-2 border-aqua rounded-lg focus:outline-none focus:border-teal transition-colors dark:bg-night dark:border-steel dark:text-sand dark:focus:border-khaki;
   }
 }
 
 @layer utilities {
-  .text-gradient {
-    @apply bg-gradient-to-r from-teal to-ocean bg-clip-text text-transparent;
+.text-gradient {
+    @apply bg-gradient-to-r from-teal to-ocean bg-clip-text text-transparent dark:from-khaki dark:to-sand;
   }
 }

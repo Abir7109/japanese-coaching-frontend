@@ -23,7 +23,7 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-ivory py-12">
+    <div className="min-h-screen bg-ivory dark:bg-night py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Welcome Section */}
         <div className="card mb-8 bg-gradient-to-r from-teal to-ocean text-white">

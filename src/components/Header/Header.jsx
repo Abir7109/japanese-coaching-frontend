@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import ThemeToggle from '../ThemeToggle';
 
 const Header = () => {
   const { user, logout, isAuthenticated, isAdmin, isTeacher } = useAuth();
@@ -13,7 +14,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
+    <header className="bg-white dark:bg-night shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
@@ -23,20 +24,20 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-ocean hover:text-teal transition-colors font-medium">
+            <Link to="/" className="text-ocean dark:text-sand hover:text-teal dark:hover:text-sand/80 transition-colors font-medium">
               Home
             </Link>
             
             {isAuthenticated && (
               <>
-                <Link to="/dashboard" className="text-ocean hover:text-teal transition-colors font-medium">
+                <Link to="/dashboard" className="text-ocean dark:text-sand hover:text-teal dark:hover:text-sand/80 transition-colors font-medium">
                   Dashboard
                 </Link>
-                <Link to="/profiles" className="text-ocean hover:text-teal transition-colors font-medium">
+                <Link to="/profiles" className="text-ocean dark:text-sand hover:text-teal dark:hover:text-sand/80 transition-colors font-medium">
                   Students
                 </Link>
                 {(isAdmin || isTeacher) && (
-                  <Link to="/admin" className="text-ocean hover:text-teal transition-colors font-medium">
+                  <Link to="/admin" className="text-ocean dark:text-sand hover:text-teal dark:hover:text-sand/80 transition-colors font-medium">
                     Admin
                   </Link>
                 )}
@@ -55,13 +56,14 @@ const Header = () => {
                   )}
                   <span className="text-ocean font-medium">{user?.name}</span>
                 </Link>
+                <ThemeToggle />
                 <button onClick={handleLogout} className="btn-primary">
                   Logout
                 </button>
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link to="/login" className="text-ocean hover:text-teal transition-colors font-medium">
+                <Link to="/login" className="text-ocean dark:text-sand hover:text-teal dark:hover:text-sand/80 transition-colors font-medium">
                   Login
                 </Link>
                 <Link to="/register" className="btn-primary">
@@ -73,7 +75,7 @@ const Header = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-ocean hover:text-teal transition-colors"
+            className="md:hidden text-ocean dark:text-sand hover:text-teal dark:hover:text-sand/80 transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

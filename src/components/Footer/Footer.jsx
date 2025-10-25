@@ -3,16 +3,16 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="bg-ocean text-white mt-auto">
+    <footer className="bg-ocean dark:bg-night text-white dark:text-sand mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* About Section */}
           <div>
             <h3 className="text-xl font-semibold mb-4">🌸 日本語コーチング</h3>
-            <p className="text-aqua mb-4">
+            <p className="text-aqua dark:text-khaki mb-4">
               Fostering a connected, immersive learning experience for students and teachers of Japanese language.
             </p>
-            <p className="text-sm text-aqua">
+            <p className="text-sm text-aqua dark:text-khaki">
               Building bridges through language and culture.
             </p>
           </div>
@@ -22,7 +22,7 @@ const Footer = () => {
             <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-aqua hover:text-white transition-colors">
+                <Link to="/" className="text-aqua dark:text-khaki hover:text-white dark:hover:text-sand transition-colors">
                   Home
                 </Link>
               </li>
@@ -47,7 +47,7 @@ const Footer = () => {
           {/* Contact & Social */}
           <div>
             <h3 className="text-xl font-semibold mb-4">Connect With Us</h3>
-            <div className="space-y-2 text-aqua">
+            <div className="space-y-2 text-aqua dark:text-khaki">
               <p>👨‍💻 Credit: <span className="font-semibold text-white">Abir</span></p>
               <p>📧 Email: rahikulmakhtum147@gmail.com</p>
               <p>📞 Phone: +8801919069898</p>
