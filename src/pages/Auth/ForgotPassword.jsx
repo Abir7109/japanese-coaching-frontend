@@ -11,7 +11,7 @@ export default function ForgotPassword() {
     setLoading(true);
     setStatus(null);
     try {
-      await axios.post('/auth/forgot-password', { email });
+      await axios.post('/api/auth/forgot-password', { email });
       setStatus({ type: 'success', msg: 'If that email is registered, a reset link was sent.' });
     } catch (err) {
       setStatus({ type: 'error', msg: err.response?.data?.message || 'Something went wrong' });

@@ -19,7 +19,7 @@ export default function ResetPassword() {
     setLoading(true);
     setStatus(null);
     try {
-      await axios.post(`/auth/reset-password/${token}`, { password });
+      await axios.post(`/api/auth/reset-password/${token}`, { password });
       setStatus({ type: 'success', msg: 'Password updated. Redirecting to login...' });
       setTimeout(() => navigate('/login'), 1200);
     } catch (err) {
