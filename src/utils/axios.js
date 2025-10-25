@@ -4,7 +4,8 @@ import axios from 'axios';
 const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 axios.defaults.baseURL = baseURL;
-axios.defaults.headers.post['Content-Type'] = 'application/json';
+// Do not set a global default for post Content-Type so FormData can set its own boundary
+// axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 // Add request interceptor
 axios.interceptors.request.use(
@@ -12,6 +13,12 @@ axios.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // If sending FormData, let the browser set the Content-Type (with boundary)
+    if (config.data instanceof FormData) {
+      if (config.headers && config.headers['Content-Type']) {
+        delete config.headers['Content-Type'];
+      }
     }
     return config;
   },
