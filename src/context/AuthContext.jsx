@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { requestNotificationPermission } from '../utils/notifications';
 
 const AuthContext = createContext();
 
@@ -50,6 +51,9 @@ export const AuthProvider = ({ children }) => {
       setToken(token);
       setUser(user);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      // Ask notification permission on login
+      setTimeout(() => { requestNotificationPermission(); }, 0);
       
       return { success: true };
     } catch (error) {
@@ -75,6 +79,9 @@ export const AuthProvider = ({ children }) => {
       setToken(token);
       setUser(user);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      // Ask notification permission on register
+      setTimeout(() => { requestNotificationPermission(); }, 0);
       
       return { success: true };
     } catch (error) {

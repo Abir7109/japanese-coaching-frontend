@@ -26,6 +26,7 @@ const CreateNotice = ({ onNoticeCreated }) => {
       await axios.post('/api/notices', formData);
       setFormData({ title: '', content: '', priority: 'medium' });
       onNoticeCreated();
+      try { const { notify } = await import('../../utils/notifications'); notify('Notice posted', { body: formData.title, icon: '/assets/og-image.png' }); } catch {}
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to create notice');
     } finally {

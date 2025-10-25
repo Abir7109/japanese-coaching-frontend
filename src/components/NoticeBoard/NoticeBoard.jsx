@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import NoticeItem from './NoticeItem';
 import CreateNotice from './CreateNotice';
+import { notify } from '../../utils/notifications';
 
 const NoticeBoard = () => {
   const [notices, setNotices] = useState([]);
@@ -12,6 +13,8 @@ const NoticeBoard = () => {
 
   const canManageNotices = isTeacher || isAdmin;
 
+  const [prevIds, setPrevIds] = useState([]);
+
   useEffect(() => {
     fetchNotices();
   }, []);
@@ -19,7 +22,19 @@ const NoticeBoard = () => {
   const fetchNotices = async () => {
     try {
       const res = await axios.get('/api/notices');
-      setNotices(res.data.notices);
+      const list = res.data.notices || [];
+      setNotices(list);
+      // Notify if new notice arrived
+      const currentIds = list.map(n => n._id);
+      const diff = currentIds.find(id => !prevIds.includes(id));
+      if (prevIds.length && diff) {
+        const n = list[0];
+        notify(n.title || 'New notice', {
+          body: (n.content || '').slice(0, 100),
+          icon: '/assets/og-image.png'
+        });
+      }
+      setPrevIds(currentIds);
     } catch (error) {
       console.error('Error fetching notices:', error);
     } finally {

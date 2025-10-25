@@ -9,7 +9,7 @@ const AttendanceBoard = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
-  const [unmarkedOnly, setUnmarkedOnly] = useState(false);
+  const [selected, setSelected] = useState(new Set());
 
   const fetchData = async () => {
     try {
@@ -33,6 +33,17 @@ const AttendanceBoard = () => {
     fetchData();
   }, []);
 
+  // After data loads, pre-select all unmarked students
+  useEffect(() => {
+    if (!loading && users.length) {
+      const recordMapLocal = new Map(todayRecords.map(r => [r.user?._id, r]));
+      const pre = new Set(
+        users.filter(u => u.role === 'student').filter(u => !recordMapLocal.get(u._id)).map(u => u._id)
+      );
+      setSelected(pre);
+    }
+  }, [loading, users, todayRecords]);
+
   const recordMap = new Map(todayRecords.map(r => [r.user?._id, r]));
   const profileMap = new Map(profiles.map(p => [p.user?._id, p]));
 
@@ -41,6 +52,23 @@ const AttendanceBoard = () => {
       const other = prev.filter(r => String(r.user?._id) !== String(userId));
       return record ? [...other, record] : other;
     });
+  };
+
+  const toggleOne = (userId) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId); else next.add(userId);
+      return next;
+    });
+  };
+
+  const toggleAll = (checked) => {
+    if (checked) {
+      const all = users.filter(u => u.role === 'student').map(u => u._id);
+      setSelected(new Set(all));
+    } else {
+      setSelected(new Set());
+    }
   };
 
   const mark = async (userId, incrementLesson) => {
@@ -58,17 +86,14 @@ const AttendanceBoard = () => {
     }
   };
 
-  const markAllUnmarked = async () => {
-    const list = users
-      .filter(u => u.role === 'student')
-      .filter(u => !recordMap.get(u._id));
+  const attendSelected = async (incrementLesson = false) => {
+    const list = users.filter(u => selected.has(u._id));
     if (list.length === 0) return;
     setSubmitting(true);
     try {
-      await Promise.allSettled(list.map(u => axios.post('/api/attendance/mark', { userId: u._id, present: true, incrementLesson: false })));
-      // refresh minimal: create records for each
-      list.forEach(u => setRecordFor(u._id, { user: { _id: u._id }, present: true, lessonIncrement: 0 }));
-      setInfo(`Marked ${list.length} present`);
+      await Promise.allSettled(list.map(u => axios.post('/api/attendance/mark', { userId: u._id, present: true, incrementLesson })));
+      list.forEach(u => setRecordFor(u._id, { user: { _id: u._id }, present: true, lessonIncrement: incrementLesson ? 1 : 0 }));
+      setInfo(`Marked ${list.length} ${incrementLesson ? 'with lesson' : 'present'}`);
       setTimeout(()=>setInfo(''), 1500);
     } catch (e) {
       setError('Some marks failed');
@@ -93,12 +118,13 @@ const AttendanceBoard = () => {
           <h2 className="text-2xl font-bold text-ocean">🗂️ Attendance Board (Today)</h2>
           <p className="text-sm text-gray-600">Marked: {todayRecords.length} / {users.filter(u=>u.role==='student').length}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" className="accent-teal" checked={unmarkedOnly} onChange={(e)=>setUnmarkedOnly(e.target.checked)} />
-            Show unmarked only
+            <input type="checkbox" className="accent-teal" checked={selected.size === users.filter(u=>u.role==='student').length} onChange={(e)=>toggleAll(e.target.checked)} />
+            Select all
           </label>
-          <button onClick={markAllUnmarked} disabled={submitting} className="btn-primary">Mark all present</button>
+          <button onClick={()=>attendSelected(false)} disabled={submitting || selected.size===0} className="btn-primary">Attend selected</button>
+          <button onClick={()=>attendSelected(true)} disabled={submitting || selected.size===0} className="btn-secondary">Attend +1 lesson</button>
           <button onClick={fetchData} className="btn-secondary">Refresh</button>
         </div>
       </div>
@@ -124,13 +150,14 @@ const AttendanceBoard = () => {
             {users
               .filter(u => u.role === 'student')
               .sort((a,b)=>a.name.localeCompare(b.name))
-              .filter(u => !unmarkedOnly || !recordMap.get(u._id))
               .map((u) => {
                 const rec = recordMap.get(u._id);
                 const p = profileMap.get(u._id);
                 return (
                   <tr key={u._id} className="border-b border-gray-200 hover:bg-ivory">
-                    <td className="py-3 px-4 font-medium text-ocean">{u.name}
+                    <td className="py-3 px-4 font-medium text-ocean flex items-center gap-2">
+                      <input type="checkbox" className="accent-teal" checked={selected.has(u._id)} onChange={()=>toggleOne(u._id)} />
+                      <span>{u.name}</span>
                       <div className="text-xs text-gray-500">Lessons: {p?.progress?.lessonsCompleted ?? 0} • Streak: {p?.progress?.currentStreak ?? 0}</div>
                     </td>
                     <td className="py-3 px-4 text-gray-600">{u.email}</td>
