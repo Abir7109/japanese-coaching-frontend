@@ -124,7 +124,6 @@ const AttendanceBoard = () => {
             Select all
           </label>
           <button onClick={()=>attendSelected(false)} disabled={submitting || selected.size===0} className="btn-primary">Attend selected</button>
-          <button onClick={()=>attendSelected(true)} disabled={submitting || selected.size===0} className="btn-secondary">Attend +1 lesson</button>
           <button onClick={fetchData} className="btn-secondary">Refresh</button>
         </div>
       </div>
@@ -177,13 +176,7 @@ const AttendanceBoard = () => {
                         >
                           {rec ? 'Marked' : 'Present'}
                         </button>
-                        <button
-                          disabled={submitting}
-                          onClick={() => mark(u._id, true)}
-                          className="btn-primary"
-                        >
-                          + Lesson
-                        </button>
+                        <button onClick={fetchData} className="btn-primary">Refresh</button>
                       </div>
                     </td>
                   </tr>
