@@ -18,6 +18,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "postbuild": "node scripts/copy-404.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
@@ -45,7 +46,7 @@
     "autoprefixer": "^10.4.21",
     "gh-pages": "^6.3.0",
     "postcss": "^8.4.47",
-    "tailwindcss": "^4.1.16"
+    "tailwindcss": "^3.4.13"
   },
   "overrides": {
     "nth-check": "^2.1.1",
