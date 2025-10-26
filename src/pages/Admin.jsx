@@ -14,6 +14,7 @@ const Admin = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState(null);
+  const [settingsId, setSettingsId] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [saveError, setSaveError] = useState('');
@@ -38,6 +39,7 @@ const Admin = () => {
     if (!data) return null;
     const s = data.settings || data;
     return {
+      id: s._id || s.id || null,
       currentBookNameJa: s.currentBookNameJa || s.currentBookNameJP || s.bookNameJa || s.book || 'みんなの日本語',
       currentLesson: Number(s.currentLesson ?? s.lesson ?? 0) || 0,
     };
@@ -51,7 +53,9 @@ const Admin = () => {
         try { const res = await axios.get(u); ok = res; break; } catch (err) { lastErr = err; }
       }
       if (!ok) throw lastErr || new Error('Failed to load settings');
-      setSettings(normalizeSettings(ok.data));
+      const norm = normalizeSettings(ok.data);
+      setSettings(norm);
+      setSettingsId(norm?.id || null);
     } catch (e) {
       // ignore
     }
@@ -70,10 +74,10 @@ const Admin = () => {
     };
     try {
       const urls = [
+        settingsId ? { method: 'put', url: `/api/settings/${settingsId}` } : null,
         { method: 'put', url: '/api/settings' },
         { method: 'post', url: '/api/settings' },
-        { method: 'post', url: '/api/settings/update' },
-      ];
+      ].filter(Boolean);
       let ok = null; let lastErr = null; let lastUrl = '';
       for (const u of urls) {
         try {
@@ -87,6 +91,7 @@ const Admin = () => {
       if (!ok) throw lastErr || new Error('Failed');
       const normalized = normalizeSettings(ok.data);
       setSettings(normalized);
+      setSettingsId(normalized?.id || settingsId);
       setSaveMessage('Settings saved');
     } catch (e) {
       const tried = e?.response?.config?.url ? ` (${e.response.config.url})` : '';
