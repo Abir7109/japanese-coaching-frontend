@@ -74,11 +74,17 @@ const Admin = () => {
     };
     try {
       const urls = [
-        { method: 'post', url: '/api/settings' },
-        settingsId ? { method: 'put', url: `/api/settings/${settingsId}` } : null,
         { method: 'put', url: '/api/settings' },
-        { method: 'post', url: '/api/settings/save' },
-        { method: 'post', url: '/api/settings/upsert' },
+        settingsId ? { method: 'put', url: `/api/settings/${settingsId}` } : null,
+        { method: 'patch', url: '/api/settings' },
+        settingsId ? { method: 'patch', url: `/api/settings/${settingsId}` } : null,
+        { method: 'post', url: '/api/settings' },
+        { method: 'post', url: '/api/admin/settings' },
+        { method: 'put', url: '/api/admin/settings' },
+        { method: 'post', url: '/api/settings/admin' },
+        { method: 'put', url: '/api/settings/admin' },
+        { method: 'post', url: '/api/class/settings' },
+        { method: 'put', url: '/api/class/settings' },
       ].filter(Boolean);
       const bodies = [
         payload,
