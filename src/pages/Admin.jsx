@@ -18,6 +18,9 @@ const Admin = () => {
   const [savingSettings, setSavingSettings] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [saveError, setSaveError] = useState('');
+  // Advanced: allow custom endpoint override (persisted locally)
+  const [customSaveUrl, setCustomSaveUrl] = useState(localStorage.getItem('customSettingsUrl') || '');
+  const [customSaveMethod, setCustomSaveMethod] = useState(localStorage.getItem('customSettingsMethod') || 'put');
 
   useEffect(() => {
     fetchUsers();
@@ -74,16 +77,9 @@ const Admin = () => {
       currentLesson: Number(settings.currentLesson) || 0,
     };
     try {
-      const urlCandidates = [
-        settingsId ? `/api/settings/${settingsId}` : null,
-        '/api/settings',
-        settingsId ? `/settings/${settingsId}` : null,
-        '/settings',
-        settingsId ? `/api/v1/settings/${settingsId}` : null,
-        '/api/v1/settings',
-        '/api/admin/settings',
-        '/api/settings/admin',
-      ].filter(Boolean);
+      // If admin provides a custom endpoint, try that first (supports :id placeholder)
+      let ok = null; let lastErr = null; let lastUrl = '';
+      const triedList = [];
       const methods = ['put','patch','post'];
       const bodies = [
         payload,
@@ -91,24 +87,42 @@ const Admin = () => {
         { bookNameJa: payload.currentBookNameJa, currentLesson: payload.currentLesson },
         { currentBookName: payload.currentBookNameJa, lesson: payload.currentLesson },
       ];
-      let ok = null; let lastErr = null; let lastUrl = '';
-      const triedList = [];
-      for (const url of urlCandidates) {
-        // keep a breadcrumb list globally for debugging
-        if (typeof window !== 'undefined') window.__lastTriedSettingsList = triedList.join(', ');
-        for (const method of methods) {
-          for (const body of bodies) {
-            triedList.push(`${method.toUpperCase()} ${url}`);
-            try {
-              lastUrl = url;
-              const res = await axios[method](url, body);
-              ok = res; break;
-            } catch (err) {
-              lastErr = err;
+      if (customSaveUrl) {
+        const url = (customSaveUrl.includes(':id') && settingsId) ? customSaveUrl.replace(':id', settingsId) : customSaveUrl;
+        const m = (customSaveMethod || 'put').toLowerCase();
+        triedList.push(`${m.toUpperCase()} ${url}`);
+        for (const b of bodies) {
+          try { lastUrl = url; const res = await axios[m](url, b); ok = res; break; } catch (err) { lastErr = err; }
+        }
+      }
+      if (!ok) {
+        const urlCandidates = [
+          settingsId ? `/api/settings/${settingsId}` : null,
+          '/api/settings',
+          settingsId ? `/settings/${settingsId}` : null,
+          '/settings',
+          settingsId ? `/api/v1/settings/${settingsId}` : null,
+          '/api/v1/settings',
+          '/api/admin/settings',
+          '/api/settings/admin',
+        ].filter(Boolean);
+        for (const url of urlCandidates) {
+          for (const method of methods) {
+            for (const body of bodies) {
+              triedList.push(`${method.toUpperCase()} ${url}`);
+              try {
+                lastUrl = url;
+                const res = await axios[method](url, body);
+                ok = res; break;
+              } catch (err) {
+                lastErr = err;
+              }
             }
+            if (ok) break;
           }
           if (ok) break;
         }
+      }
         if (ok) break;
       }
       if (!ok) throw lastErr || new Error('Failed');
@@ -210,6 +224,22 @@ const Admin = () => {
             </label>
             <div className="text-sm text-gray-500">Students see this on Dashboard and Profile</div>
           </div>
+          {/* Advanced override */}
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm text-ocean">Advanced: custom save endpoint</summary>
+            <div className="mt-2 grid md:grid-cols-3 gap-2">
+              <label className="text-sm text-ocean md:col-span-2">URL (supports :id)
+                <input className="input-field mt-1" placeholder="/api/settings/:id" value={customSaveUrl} onChange={e=>{ setCustomSaveUrl(e.target.value); localStorage.setItem('customSettingsUrl', e.target.value); }} />
+              </label>
+              <label className="text-sm text-ocean">Method
+                <select className="input-field mt-1" value={customSaveMethod} onChange={e=>{ setCustomSaveMethod(e.target.value); localStorage.setItem('customSettingsMethod', e.target.value); }}>
+                  <option value="put">PUT</option>
+                  <option value="patch">PATCH</option>
+                  <option value="post">POST</option>
+                </select>
+              </label>
+            </div>
+          </details>
         </div>
 
         {/* Preview of what students see */}
