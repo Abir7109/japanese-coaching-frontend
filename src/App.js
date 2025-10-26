@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Profiles from './pages/Profiles';
+import Profile from './pages/Profile';
 import StudentProfile from './pages/StudentProfile';
 import SelfProfile from './pages/SelfProfile';
 import Admin from './pages/Admin';
