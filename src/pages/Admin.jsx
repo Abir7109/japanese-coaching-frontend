@@ -74,19 +74,30 @@ const Admin = () => {
     };
     try {
       const urls = [
+        { method: 'post', url: '/api/settings' },
         settingsId ? { method: 'put', url: `/api/settings/${settingsId}` } : null,
         { method: 'put', url: '/api/settings' },
-        { method: 'post', url: '/api/settings' },
+        { method: 'post', url: '/api/settings/save' },
+        { method: 'post', url: '/api/settings/upsert' },
       ].filter(Boolean);
+      const bodies = [
+        payload,
+        { settings: payload },
+        { bookNameJa: payload.currentBookNameJa, currentLesson: payload.currentLesson },
+        { currentBookName: payload.currentBookNameJa, lesson: payload.currentLesson },
+      ];
       let ok = null; let lastErr = null; let lastUrl = '';
       for (const u of urls) {
-        try {
-          lastUrl = u.url;
-          const res = await axios[u.method](u.url, payload);
-          ok = res; break;
-        } catch (err) {
-          lastErr = err;
+        for (const b of bodies) {
+          try {
+            lastUrl = u.url;
+            const res = await axios[u.method](u.url, b);
+            ok = res; break;
+          } catch (err) {
+            lastErr = err;
+          }
         }
+        if (ok) break;
       }
       if (!ok) throw lastErr || new Error('Failed');
       const normalized = normalizeSettings(ok.data);
