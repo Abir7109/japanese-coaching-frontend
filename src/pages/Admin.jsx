@@ -15,6 +15,8 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -32,10 +34,19 @@ const Admin = () => {
     }
   };
 
+  const normalizeSettings = (data) => {
+    if (!data) return null;
+    const s = data.settings || data;
+    return {
+      currentBookNameJa: s.currentBookNameJa || s.currentBookNameJP || s.bookNameJa || s.book || 'みんなの日本語',
+      currentLesson: Number(s.currentLesson ?? s.lesson ?? 0) || 0,
+    };
+  };
+
   const fetchSettings = async () => {
     try {
       const res = await axios.get('/api/settings');
-      setSettings(res.data.settings);
+      setSettings(normalizeSettings(res.data));
     } catch (e) {
       // ignore
     }
@@ -44,6 +55,8 @@ const Admin = () => {
   const saveSettings = async () => {
     if (!settings) return;
     setSavingSettings(true);
+    setSaveMessage('');
+    setSaveError('');
     const payload = {
       currentBookNameJa: settings.currentBookNameJa,
       currentBookNameJP: settings.currentBookNameJa,
@@ -63,16 +76,14 @@ const Admin = () => {
           ok = res; break;
         } catch (err) {
           lastErr = err;
-          if (![404,405].includes(err.response?.status)) {
-            // break on non-route errors
-          }
         }
       }
       if (!ok) throw lastErr || new Error('Failed');
-      setSettings(ok.data.settings || ok.data);
-      alert('Settings saved');
+      const normalized = normalizeSettings(ok.data);
+      setSettings(normalized);
+      setSaveMessage('Settings saved');
     } catch (e) {
-      alert(e.response?.data?.message || e.message || 'Failed to save settings');
+      setSaveError(e.response?.data?.message || e.message || 'Failed to save settings');
     } finally {
       setSavingSettings(false);
     }
@@ -148,6 +159,12 @@ const Admin = () => {
             <h2 className="text-2xl font-bold text-ocean">Class Settings</h2>
             <button onClick={saveSettings} disabled={savingSettings} className="btn-primary">{savingSettings ? 'Saving…' : 'Save'}</button>
           </div>
+          {saveMessage && (
+            <div className="mb-3 px-3 py-2 rounded bg-green-100 text-green-700 text-sm">{saveMessage}</div>
+          )}
+          {saveError && (
+            <div className="mb-3 px-3 py-2 rounded bg-red-100 text-red-700 text-sm">{saveError}</div>
+          )}
           <div className="grid md:grid-cols-2 gap-4">
             <label className="block text-sm text-ocean">Book (日本語)
               <input className="input-field mt-1" value={settings?.currentBookNameJa || ''} onChange={e=>setSettings(s=>({...s, currentBookNameJa: e.target.value}))} placeholder="みんなの日本語" />
@@ -157,6 +174,13 @@ const Admin = () => {
             </label>
             <div className="text-sm text-gray-500">Students see this on Dashboard and Profile</div>
           </div>
+        </div>
+
+        {/* Preview of what students see */}
+        <div className="card mb-8">
+          <div className="font-semibold text-ocean mb-2">Preview: Student View</div>
+          <div className="text-sm text-gray-700">{settings?.currentBookNameJa || 'みんなの日本語'} • Lesson {settings?.currentLesson ?? 0}</div>
+          <div className="text-xs text-gray-500 mt-1">This appears on the Dashboard header and on student profiles.</div>
         </div>
 
         {/* Stats */}
