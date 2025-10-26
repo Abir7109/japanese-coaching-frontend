@@ -118,42 +118,20 @@ const Dashboard = () => {
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button disabled={rated || stars===0 || !adminUser} className="btn-primary" onClick={async()=>{
-                    setRatingMsg('');
-                    const adminId = adminUser?._id;
-                    const urls = [
-                      '/api/ratings','/api/ratings/submit','/api/ratings/new','/api/rate',
-                      `/api/ratings/${adminId}`,
-                      `/api/ratings/user/${adminId}`,
-                      `/api/ratings/admin/${adminId}`,
-                    ];
-                    const bodies = [
-                      { value: stars },
-                      { rating: stars },
-                      { stars },
-                      { value: stars, targetUserId: adminId },
-                      { rating: stars, targetUserId: adminId },
-                      { stars, targetUserId: adminId },
-                      { value: stars, to: adminId },
-                      { rating: stars, to: adminId },
-                    ];
-                    let ok = false; let lastErr = null; let lastUrl = '';
-                    for (const u of urls) {
-                      for (const b of bodies) {
-                        try { lastUrl = u; await axios.post(u, b); ok = true; break; }
-                        catch (e) { lastErr = e; if (![404,405].includes(e.response?.status)) { /* keep trying */ } }
-                      }
-                      if (ok) break;
-                    }
-                    if (ok) { setRated(true); setRatingMsg('Thanks for your feedback!'); }
-                    else {
-                      const msg = (lastErr?.response?.data?.message || lastErr?.message || 'Failed to submit rating') + (lastErr?.response?.config?.url ? ` (${lastErr.response.config.url})` : lastUrl ? ` (${lastUrl})` : '');
+                  <button disabled={rated || stars===0} className="btn-primary" onClick={async()=>{
+                    try {
+                      setRatingMsg('');
+                      await axios.post('/api/ratings', { value: stars });
+                      setRated(true);
+                      setRatingMsg('Thanks for your feedback!');
+                    } catch (e) {
+                      const msg = e.response?.data?.message || e.message || 'Failed to submit rating';
                       setRatingMsg(msg);
                     }
                   }}>{rated ? 'Rated' : 'Submit Rating'}</button>
                   {ratingMsg && <span className="text-sm text-gray-600">{ratingMsg}</span>}
                 </div>
-                <div className="text-xs text-gray-500 mt-2">Anonymous, one rating per day. {adminUser ? '' : 'No admin assigned yet.'}</div>
+                <div className="text-xs text-gray-500 mt-2">Anonymous, one rating per day.</div>
               </div>
             </div>
           </>
