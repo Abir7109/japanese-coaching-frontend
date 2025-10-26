@@ -126,19 +126,20 @@ const Dashboard = () => {
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button disabled={rated || stars===0} className="btn-primary" onClick={async()=>{
+                  <button disabled={rated || stars===0 || !adminUser} className="btn-primary" onClick={async()=>{
                     try {
                       setRatingMsg('');
-                      await axios.post('/api/ratings', { value: stars });
+                      await axios.post('/api/ratings', { value: stars, rating: stars, targetUserId: adminUser?._id });
                       setRated(true);
                       setRatingMsg('Thanks for your feedback!');
                     } catch (e) {
-                      setRatingMsg(e.response?.data?.message || 'Failed to submit rating');
+                      const msg = e.response?.data?.message || e.message || 'Failed to submit rating';
+                      setRatingMsg(msg);
                     }
                   }}>{rated ? 'Rated' : 'Submit Rating'}</button>
                   {ratingMsg && <span className="text-sm text-gray-600">{ratingMsg}</span>}
                 </div>
-                <div className="text-xs text-gray-500 mt-2">Anonymous, limited to one rating per day.</div>
+                <div className="text-xs text-gray-500 mt-2">Anonymous, one rating per day. {adminUser ? '' : 'No admin assigned yet.'}</div>
               </div>
             </div>
           </>
