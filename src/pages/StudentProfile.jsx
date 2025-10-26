@@ -107,9 +107,13 @@ export default function StudentProfile() {
       } catch (e) {
         // If viewing own profile and it doesn't exist yet, create it with defaults
         const meId = (user?.id || user?._id);
-        if (meId && String(meId) === String(id) && (e.response?.status === 404)) {
+        if (e.response?.status === 404) {
           try {
-            await axios.put('/api/profiles', {});
+            if (meId && String(meId) === String(id)) {
+              await axios.put('/api/profiles', {});
+            } else if (user?.role === 'admin' || user?.role === 'teacher') {
+              await axios.put(`/api/profiles/${id}/admin`, {});
+            }
             const profRes2 = await axios.get(`/api/profiles/user/${id}`);
             if (mounted) setProfile(profRes2.data.profile);
           } catch (_) { /* ignore */ }
