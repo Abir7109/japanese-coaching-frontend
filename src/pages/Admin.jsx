@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AttendanceBoard from '../components/Admin/AttendanceBoard';
 
+const MOTIVATION_QUOTES = [
+  'Leadership is service, not status. Your effort uplifts everyone. — Thank you!',
+  'The best leaders create more leaders. Your guidance empowers our class.',
+  'Small consistent actions lead to big results. Your consistency inspires us.',
+  'Clarity, kindness, and courage—pillars of great admin work. We appreciate you.',
+  'A great classroom is built on care and accountability. Thanks for modeling both.'
+];
+
 const Admin = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -106,6 +114,12 @@ const Admin = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-ocean mb-2">⚙️ Admin Panel</h1>
           <p className="text-gray-600">Manage users and their roles</p>
+        </div>
+
+        {/* Motivation */}
+        <div className="card mb-8 bg-gradient-to-r from-khaki to-aqua text-night">
+          <div className="text-lg font-semibold mb-1">💡 Motivation</div>
+          <div className="text-sm">{MOTIVATION_QUOTES[Math.floor(Math.random()*MOTIVATION_QUOTES.length)]}</div>
         </div>
 
         {/* Global Settings */}

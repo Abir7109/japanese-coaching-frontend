@@ -85,9 +85,12 @@ export default function StudentProfile() {
   const [active, setActive] = useState('Overview');
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const isTeacher = user?.role === 'teacher';
+  const isStudent = user?.role === 'student';
   const [compare, setCompare] = useState(false);
   const [rankInfo, setRankInfo] = useState(null);
   const [settings, setSettings] = useState(null);
+  const [adminUser, setAdminUser] = useState(null);
   const isSelf = (user?.id || user?._id) === profile?.user?._id;
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({ bio: '', socialLinks: { facebook:'', whatsapp:'', instagram:'', twitter:'' } });
@@ -100,13 +103,17 @@ export default function StudentProfile() {
     let mounted = true;
     (async () => {
       try {
-        const [profRes, setRes] = await Promise.all([
+        const [profRes, setRes, usersRes] = await Promise.all([
           axios.get(`/api/profiles/user/${id}`),
-          axios.get('/api/settings')
+          axios.get('/api/settings'),
+          axios.get('/api/users')
         ]);
         if (mounted) {
           setProfile(profRes.data.profile);
           setSettings(setRes.data.settings);
+          const list = usersRes.data.users || [];
+          const adm = list.find(u=>u.role==='admin') || list.find(u=>u.role==='teacher') || null;
+          setAdminUser(adm);
         }
       } catch (e) {
         // If viewing own profile and it doesn't exist yet, create it with defaults
@@ -146,6 +153,7 @@ export default function StudentProfile() {
     const lessons = profile?.progress?.lessonsCompleted ?? 0;
     return (Math.min(4, (lessons/25))).toFixed(2); // naive score on 0-4
   }, [profile]);
+  const viewedIsAdmin = profile?.user?.role === 'admin';
 
   const attendance = useMemo(()=>{
     const base = profile?.progress?.currentStreak ?? 0;
@@ -263,18 +271,24 @@ export default function StudentProfile() {
 
           {/* Quick Stats */}
           <div className="card">
-            <div className="grid grid-cols-2 gap-4">
-              <Stat label="Performance (GPA)" value={(profile?.academic?.gpa ?? perf)} sub="0.00 – 4.00" />
-              <Stat label="Attendance" value={`${attendance}%`} sub="last 30 days" />
-              <div className="p-4 rounded-xl bg-ivory dark:bg-steel shadow-sm flex items-center gap-4">
-                <CircleProgress percent={coursePct} />
-                <div>
-                  <div className="text-sm text-gray-500 dark:text-sand/70">Course Progress</div>
-                  <div className="text-2xl font-bold text-ocean dark:text-sand">{coursePct}%</div>
-                </div>
+            {viewedIsAdmin && isStudent ? (
+              <div className="p-2">
+                <div className="text-sm text-gray-600 dark:text-sand/80">Admin profiles focus on leadership and support rather than academic metrics.</div>
               </div>
-              <Stat label="Last login" value={new Date().toLocaleString()} />
-            </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <Stat label="Performance (GPA)" value={(profile?.academic?.gpa ?? perf)} sub="0.00 – 4.00" />
+                <Stat label="Attendance" value={`${attendance}%`} sub="last 30 days" />
+                <div className="p-4 rounded-xl bg-ivory dark:bg-steel shadow-sm flex items-center gap-4">
+                  <CircleProgress percent={coursePct} />
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-sand/70">Course Progress</div>
+                    <div className="text-2xl font-bold text-ocean dark:text-sand">{coursePct}%</div>
+                  </div>
+                </div>
+                <Stat label="Last login" value={new Date().toLocaleString()} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -314,6 +328,23 @@ export default function StudentProfile() {
                 <div>
                   <h3 className="text-lg font-semibold text-ocean dark:text-sand mb-2">About</h3>
                   <p className="text-gray-600 dark:text-sand/80">{profile.bio || 'No bio added yet.'}</p>
+                  {/* Show class admin card for students */}
+                  {isStudent && adminUser && (
+                    <div className="mt-4 p-4 rounded-lg bg-ivory dark:bg-steel flex items-center gap-3">
+                      {adminUser?.avatar ? (
+                        <img src={adminUser.avatar} alt={adminUser.name} className="w-12 h-12 rounded-xl object-cover" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-aqua to-teal text-white flex items-center justify-center font-bold">
+                          {adminUser.name?.charAt(0)?.toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-xs text-gray-500">Class Admin</div>
+                        <div className="font-semibold text-ocean dark:text-sand">{adminUser.name}</div>
+                        <div className="text-xs text-gray-500">{adminUser.email}</div>
+                      </div>
+                    </div>
+                  )}
                   {isSelf && (
                     <div className="mt-3">
                       {!editOpen ? (
@@ -395,18 +426,27 @@ export default function StudentProfile() {
 
             {active === 'Courses' && (
               <div className="space-y-3">
-                {(profile?.academic?.grades?.length ? profile.academic.grades : [{course:'Core A',score:75,letter:'B',completed:false}]).map((g,idx)=> (
-                  <div key={idx} className="p-4 rounded-lg bg-ivory dark:bg-steel flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="font-semibold text-ocean dark:text-sand">{g.course}</div>
-                      <div className="text-sm text-gray-500 dark:text-sand/70">Score: {g.score} • Grade: {g.letter} • {g.completed ? 'Completed' : 'In progress'}</div>
-                    </div>
-                    <CircleProgress percent={Math.max(0, Math.min(100, g.score))} size={64} stroke={8} barColor="#948979" />
-                  </div>
-                ))}
+                {/* Hide academic performance when viewing admin profile as a student */}
+                {!(viewedIsAdmin && isStudent) ? (
+                  <>
+                    {(profile?.academic?.grades?.length ? profile.academic.grades : [{course:'Core A',score:75,letter:'B',completed:false}]).map((g,idx)=> (
+                      <div key={idx} className="p-4 rounded-lg bg-ivory dark:bg-steel flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="font-semibold text-ocean dark:text-sand">{g.course}</div>
+                          <div className="text-sm text-gray-500 dark:text-sand/70">Score: {g.score} • Grade: {g.letter} • {g.completed ? 'Completed' : 'In progress'}</div>
+                        </div>
+                        <CircleProgress percent={Math.max(0, Math.min(100, g.score))} size={64} stroke={8} barColor="#948979" />
+                      </div>
+                    ))}
 
-                {isAdmin && (
-                  <AdminAcademicEditor profile={profile} onUpdated={setProfile} />
+                    {isAdmin && (
+                      <AdminAcademicEditor profile={profile} onUpdated={setProfile} />
+                    )}
+                  </>
+                ) : (
+                  <div className="p-4 rounded-lg bg-ivory dark:bg-steel">
+                    <div className="text-sm text-gray-600 dark:text-sand/80">Academic performance is hidden for admin profiles.</div>
+                  </div>
                 )}
               </div>
             )}
@@ -420,6 +460,17 @@ export default function StudentProfile() {
                     <div className="text-xs text-gray-500 dark:text-sand/70">Based on your lessons and streak</div>
                   </div>
                 ))}
+                {/* Motivational quotes for admin profiles */}
+                {viewedIsAdmin && (
+                  <div className="p-4 rounded-lg bg-ivory dark:bg-steel sm:col-span-3">
+                    <div className="font-semibold text-ocean dark:text-sand mb-2">Honoring Admins</div>
+                    <ul className="list-disc pl-5 text-gray-700 dark:text-sand/80 space-y-1 text-sm">
+                      <li>Leadership is not a position, it’s action. Thank you for guiding our learning journey.</li>
+                      <li>Great admins create environments where students thrive. We appreciate you!</li>
+                      <li>Consistency builds excellence—your dedication keeps this classroom moving forward.</li>
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
