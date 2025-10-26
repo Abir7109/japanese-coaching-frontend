@@ -7,6 +7,8 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState(null);
+  const [ratings, setRatings] = useState([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -19,14 +21,33 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get('/api/settings');
+        setSettings(res.data.settings);
+      } catch {}
+    };
     fetchProfile();
+    fetchSettings();
   }, []);
+
+  useEffect(() => {
+    if (!user || (user.role !== 'admin' && user.role !== 'teacher')) return;
+    (async () => {
+      try {
+        const res = await axios.get('/api/ratings/recent');
+        setRatings(res.data.ratings || []);
+      } catch {}
+    })();
+  }, [user]);
+
+  const avgRating = ratings.length ? (ratings.reduce((s,r)=>s+r.value,0)/ratings.length).toFixed(2) : '—';
 
   return (
     <div className="min-h-screen bg-ivory dark:bg-night py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Welcome Section */}
-        <div className="card mb-8 bg-gradient-to-r from-teal to-ocean text-white">
+        <div className="card mb-4 bg-gradient-to-r from-teal to-ocean text-white">
           <div className="flex items-center gap-4">
             {user?.avatar ? (
               <img src={user.avatar} alt={user?.name} className="w-16 h-16 rounded-full object-cover border-2 border-aqua shadow-lg bg-white" />
@@ -37,29 +58,48 @@ const Dashboard = () => {
             )}
             <div>
               <h1 className="text-3xl font-bold">Welcome back, {user?.name}! 🌸</h1>
-              <p className="text-aqua mt-1">Ready to continue your Japanese learning journey?</p>
+              <p className="text-aqua mt-1">{settings ? `${settings.currentBookNameJa} • Lesson ${settings.currentLesson}` : 'Ready to continue your Japanese learning journey?'}</p>
             </div>
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="card text-center hover:scale-105 transition-transform">
-            <div className="text-4xl mb-2">📚</div>
-            <p className="text-2xl font-bold text-teal">{loading ? '—' : (profile?.progress?.lessonsCompleted ?? 0)}</p>
-            <p className="text-gray-600">Lessons Completed</p>
+        {/* Student Stats or Teacher/Admin Ratings */}
+        {user?.role === 'student' ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="card text-center hover:scale-105 transition-transform">
+              <div className="text-4xl mb-2">📚</div>
+              <p className="text-2xl font-bold text-teal">{loading ? '—' : (profile?.progress?.lessonsCompleted ?? 0)}</p>
+              <p className="text-gray-600">Lessons Completed</p>
+            </div>
+            <div className="card text-center hover:scale-105 transition-transform">
+              <div className="text-4xl mb-2">🔥</div>
+              <p className="text-2xl font-bold text-ocean">{loading ? '—' : (profile?.progress?.currentStreak ?? 0)}</p>
+              <p className="text-gray-600">Day Streak</p>
+            </div>
+            <div className="card text-center hover:scale-105 transition-transform">
+              <div className="text-4xl mb-2">⭐</div>
+              <p className="text-2xl font-bold text-teal">{loading ? '—' : (profile?.japaneseLevel?.charAt(0).toUpperCase() + profile?.japaneseLevel?.slice(1) || 'Beginner')}</p>
+              <p className="text-gray-600">Current Level</p>
+            </div>
           </div>
-          <div className="card text-center hover:scale-105 transition-transform">
-            <div className="text-4xl mb-2">🔥</div>
-            <p className="text-2xl font-bold text-ocean">{loading ? '—' : (profile?.progress?.currentStreak ?? 0)}</p>
-            <p className="text-gray-600">Day Streak</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="card text-center md:col-span-2">
+              <div className="text-4xl mb-2">⭐</div>
+              <p className="text-2xl font-bold text-ocean">Average Rating (14d): {avgRating}</p>
+              <p className="text-gray-600">{ratings.length} total ratings</p>
+            </div>
+            <div className="card max-h-64 overflow-auto">
+              <div className="font-semibold text-ocean mb-2">Recent Ratings</div>
+              <ul className="space-y-1 text-sm text-gray-700">
+                {ratings.map((r,idx)=> (
+                  <li key={idx} className="flex justify-between"><span>{new Date(r.date).toLocaleDateString()}</span><span>{'★'.repeat(r.value)}</span></li>
+                ))}
+                {ratings.length===0 && <li>No ratings yet.</li>}
+              </ul>
+            </div>
           </div>
-          <div className="card text-center hover:scale-105 transition-transform">
-            <div className="text-4xl mb-2">⭐</div>
-            <p className="text-2xl font-bold text-teal">{loading ? '—' : (profile?.japaneseLevel?.charAt(0).toUpperCase() + profile?.japaneseLevel?.slice(1) || 'Beginner')}</p>
-            <p className="text-gray-600">Current Level</p>
-          </div>
-        </div>
+        )}
 
         {/* Notice Board */}
         <NoticeBoard />
