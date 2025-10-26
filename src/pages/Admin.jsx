@@ -123,8 +123,6 @@ const Admin = () => {
           if (ok) break;
         }
       }
-        if (ok) break;
-      }
       if (!ok) throw lastErr || new Error('Failed');
       const normalized = normalizeSettings(ok.data);
       setSettings(normalized);
