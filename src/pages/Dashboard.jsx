@@ -129,27 +129,33 @@ const Dashboard = () => {
                   <button disabled={rated || stars===0 || !adminUser} className="btn-primary" onClick={async()=>{
                     setRatingMsg('');
                     const adminId = adminUser?._id;
-                    const urls = ['/api/ratings','/api/ratings/submit','/api/ratings/new','/api/rate'];
+                    const urls = [
+                      '/api/ratings','/api/ratings/submit','/api/ratings/new','/api/rate',
+                      `/api/ratings/${adminId}`,
+                      `/api/ratings/user/${adminId}`,
+                      `/api/ratings/admin/${adminId}`,
+                    ];
                     const bodies = [
+                      { value: stars },
+                      { rating: stars },
+                      { stars },
                       { value: stars, targetUserId: adminId },
                       { rating: stars, targetUserId: adminId },
                       { stars, targetUserId: adminId },
                       { value: stars, to: adminId },
                       { rating: stars, to: adminId },
                     ];
-                    let ok = false; let lastErr = null;
+                    let ok = false; let lastErr = null; let lastUrl = '';
                     for (const u of urls) {
                       for (const b of bodies) {
-                        try { await axios.post(u, b); ok = true; break; }
-                        catch (e) {
-                          lastErr = e; if (![404,405].includes(e.response?.status)) { /* likely payload error */ }
-                        }
+                        try { lastUrl = u; await axios.post(u, b); ok = true; break; }
+                        catch (e) { lastErr = e; if (![404,405].includes(e.response?.status)) { /* keep trying */ } }
                       }
                       if (ok) break;
                     }
                     if (ok) { setRated(true); setRatingMsg('Thanks for your feedback!'); }
                     else {
-                      const msg = lastErr?.response?.data?.message || lastErr?.message || 'Failed to submit rating';
+                      const msg = (lastErr?.response?.data?.message || lastErr?.message || 'Failed to submit rating') + (lastErr?.response?.config?.url ? ` (${lastErr.response.config.url})` : lastUrl ? ` (${lastUrl})` : '');
                       setRatingMsg(msg);
                     }
                   }}>{rated ? 'Rated' : 'Submit Rating'}</button>

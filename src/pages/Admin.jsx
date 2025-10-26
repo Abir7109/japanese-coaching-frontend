@@ -45,8 +45,13 @@ const Admin = () => {
 
   const fetchSettings = async () => {
     try {
-      const res = await axios.get('/api/settings');
-      setSettings(normalizeSettings(res.data));
+      const urls = ['/api/settings','/api/class/settings','/settings','/api/v1/settings'];
+      let ok = null; let lastErr = null;
+      for (const u of urls) {
+        try { const res = await axios.get(u); ok = res; break; } catch (err) { lastErr = err; }
+      }
+      if (!ok) throw lastErr || new Error('Failed to load settings');
+      setSettings(normalizeSettings(ok.data));
     } catch (e) {
       // ignore
     }
@@ -69,9 +74,10 @@ const Admin = () => {
         { method: 'post', url: '/api/settings' },
         { method: 'post', url: '/api/settings/update' },
       ];
-      let ok = null; let lastErr = null;
+      let ok = null; let lastErr = null; let lastUrl = '';
       for (const u of urls) {
         try {
+          lastUrl = u.url;
           const res = await axios[u.method](u.url, payload);
           ok = res; break;
         } catch (err) {
@@ -83,7 +89,8 @@ const Admin = () => {
       setSettings(normalized);
       setSaveMessage('Settings saved');
     } catch (e) {
-      setSaveError(e.response?.data?.message || e.message || 'Failed to save settings');
+      const tried = e?.response?.config?.url ? ` (${e.response.config.url})` : '';
+      setSaveError((e.response?.data?.message || e.message || 'Failed to save settings') + tried);
     } finally {
       setSavingSettings(false);
     }
