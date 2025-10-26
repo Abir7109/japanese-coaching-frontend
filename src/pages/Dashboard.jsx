@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [stars, setStars] = useState(0);
   const [rated, setRated] = useState(false);
   const [ratingMsg, setRatingMsg] = useState('');
+  const [submitting, setSubmitting] = useState(false);
  
   useEffect(() => {
     const fetchProfile = async () => {
@@ -118,17 +119,37 @@ const Dashboard = () => {
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button disabled={rated || stars===0} className="btn-primary" onClick={async()=>{
+                  <button disabled={submitting || rated || stars===0} className="btn-primary" onClick={async()=>{
+                    setRatingMsg(''); setSubmitting(true);
                     try {
-                      setRatingMsg('');
-                      await axios.post('/api/ratings', { value: stars });
-                      setRated(true);
-                      setRatingMsg('Thanks for your feedback!');
+                      // use cached working endpoint if present
+                      const cachedUrl = localStorage.getItem('ratingsEndpoint');
+                      const cachedKey = localStorage.getItem('ratingsKey') || 'value';
+                      const body = { [cachedKey]: stars };
+                      if (cachedUrl) {
+                        await axios.post(cachedUrl, body);
+                        setRated(true); setRatingMsg('Thanks for your feedback!'); setSubmitting(false); return;
+                      }
+                      const urls = ['/api/ratings','/ratings','/api/rating','/rating','/api/rate','/rate'];
+                      const keys = ['value','rating','stars'];
+                      let ok=false, lastErr=null, usedUrl='';
+                      for (const u of urls) {
+                        for (const k of keys) {
+                          try {
+                            usedUrl=u; const b={ [k]: stars };
+                            await axios.post(u, b);
+                            ok=true; localStorage.setItem('ratingsEndpoint', u); localStorage.setItem('ratingsKey', k); break;
+                          } catch (e) { lastErr=e; }
+                        }
+                        if (ok) break;
+                      }
+                      if (!ok) throw lastErr || new Error('Rating endpoint not found');
+                      setRated(true); setRatingMsg('Thanks for your feedback!');
                     } catch (e) {
-                      const msg = e.response?.data?.message || e.message || 'Failed to submit rating';
+                      const msg = (e.response?.data?.message || e.message || 'Failed to submit rating');
                       setRatingMsg(msg);
-                    }
-                  }}>{rated ? 'Rated' : 'Submit Rating'}</button>
+                    } finally { setSubmitting(false); }
+                  }}>{submitting ? 'Submitting…' : rated ? 'Rated' : 'Submit Rating'}</button>
                   {ratingMsg && <span className="text-sm text-gray-600">{ratingMsg}</span>}
                 </div>
                 <div className="text-xs text-gray-500 mt-2">Anonymous, one rating per day.</div>
