@@ -73,19 +73,18 @@ const Admin = () => {
       currentLesson: Number(settings.currentLesson) || 0,
     };
     try {
-      const urls = [
-        { method: 'put', url: '/api/settings' },
-        settingsId ? { method: 'put', url: `/api/settings/${settingsId}` } : null,
-        { method: 'patch', url: '/api/settings' },
-        settingsId ? { method: 'patch', url: `/api/settings/${settingsId}` } : null,
-        { method: 'post', url: '/api/settings' },
-        { method: 'post', url: '/api/admin/settings' },
-        { method: 'put', url: '/api/admin/settings' },
-        { method: 'post', url: '/api/settings/admin' },
-        { method: 'put', url: '/api/settings/admin' },
-        { method: 'post', url: '/api/class/settings' },
-        { method: 'put', url: '/api/class/settings' },
+      const urlCandidates = [
+        '/api/settings',
+        settingsId ? `/api/settings/${settingsId}` : null,
+        '/settings',
+        settingsId ? `/settings/${settingsId}` : null,
+        '/api/v1/settings',
+        settingsId ? `/api/v1/settings/${settingsId}` : null,
+        '/api/admin/settings',
+        '/api/settings/admin',
+        '/api/class/settings',
       ].filter(Boolean);
+      const methods = ['put','patch','post'];
       const bodies = [
         payload,
         { settings: payload },
@@ -93,15 +92,20 @@ const Admin = () => {
         { currentBookName: payload.currentBookNameJa, lesson: payload.currentLesson },
       ];
       let ok = null; let lastErr = null; let lastUrl = '';
-      for (const u of urls) {
-        for (const b of bodies) {
-          try {
-            lastUrl = u.url;
-            const res = await axios[u.method](u.url, b);
-            ok = res; break;
-          } catch (err) {
-            lastErr = err;
+      const triedList = [];
+      for (const url of urlCandidates) {
+        for (const method of methods) {
+          for (const body of bodies) {
+            triedList.push(`${method.toUpperCase()} ${url}`);
+            try {
+              lastUrl = url;
+              const res = await axios[method](url, body);
+              ok = res; break;
+            } catch (err) {
+              lastErr = err;
+            }
           }
+          if (ok) break;
         }
         if (ok) break;
       }
@@ -112,7 +116,7 @@ const Admin = () => {
       setSaveMessage('Settings saved');
     } catch (e) {
       const tried = e?.response?.config?.url ? ` (${e.response.config.url})` : '';
-      setSaveError((e.response?.data?.message || e.message || 'Failed to save settings') + tried);
+      setSaveError((e.response?.data?.message || e.message || 'Failed to save settings') + tried + `${typeof triedList!== 'undefined' && triedList.length ? ` | Tried: ${triedList.join(', ')}` : ''}`);
     } finally {
       setSavingSettings(false);
     }
