@@ -91,6 +91,10 @@ export default function StudentProfile() {
   const isSelf = (user?.id || user?._id) === profile?.user?._id;
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({ bio: '', socialLinks: { facebook:'', whatsapp:'', instagram:'', twitter:'' } });
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [savingPhoto, setSavingPhoto] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -169,6 +173,9 @@ export default function StudentProfile() {
 
   const openEdit = () => {
     setEditForm({ bio: profile?.bio || '', socialLinks: { ...(profile?.socialLinks||{}) } });
+    setAvatarPreview(profile?.user?.avatar || null);
+    setAvatarFile(null);
+    setAvatarUrl('');
     setEditOpen(true);
   };
   const saveEdit = async () => {
@@ -178,6 +185,28 @@ export default function StudentProfile() {
       setEditOpen(false);
     } catch (e) {
       alert(e.response?.data?.message || 'Failed to update profile');
+    }
+  };
+
+  const saveAvatar = async () => {
+    if (!avatarFile && !avatarUrl) return alert('Choose a file or enter a URL');
+    try {
+      setSavingPhoto(true);
+      const meId = (user?.id || user?._id);
+      if (!meId) throw new Error('Not authenticated');
+      if (avatarFile) {
+        const fd = new FormData();
+        fd.append('avatar', avatarFile);
+        await axios.post(`/api/users/${meId}/avatar`, fd);
+      } else if (avatarUrl) {
+        await axios.post(`/api/users/${meId}/avatar`, { url: avatarUrl });
+      }
+      const profRes = await axios.get(`/api/profiles/user/${id}`);
+      setProfile(profRes.data.profile);
+    } catch (e) {
+      alert(e.response?.data?.message || e.message || 'Failed to update avatar');
+    } finally {
+      setSavingPhoto(false);
     }
   };
 
@@ -288,9 +317,48 @@ export default function StudentProfile() {
                   {isSelf && (
                     <div className="mt-3">
                       {!editOpen ? (
-                        <button className="btn-secondary" onClick={openEdit}>Edit your bio & links</button>
+                        <button className="btn-secondary" onClick={openEdit}>Edit your bio, photo & links</button>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
+                          {/* Avatar editor */}
+                          <div>
+                            <div className="text-sm font-medium text-ocean dark:text-sand mb-1">Profile Photo</div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                              <label className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-aqua cursor-pointer group">
+                                {(avatarPreview || profile?.user?.avatar) ? (
+                                  <img src={avatarPreview || profile?.user?.avatar} alt="avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full bg-ivory dark:bg-night flex items-center justify-center text-ocean dark:text-sand text-xs">No Image</div>
+                                )}
+                                <input type="file" accept="image/*" className="hidden" onChange={(e)=>{
+                                  const f = e.target.files?.[0];
+                                  if (f) { setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)); }
+                                }} />
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-end justify-center transition-opacity">
+                                  <span className="text-white text-xs mb-1">Tap to change</span>
+                                </div>
+                              </label>
+                              <div className="flex-1 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <button type="button" className="btn-secondary" onClick={()=>{
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'image/*';
+                                    input.onchange = (e)=>{
+                                      const f = e.target.files?.[0];
+                                      if (f) { setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)); }
+                                    };
+                                    input.click();
+                                  }}>Choose Photo</button>
+                                  <button type="button" className="btn-primary" disabled={savingPhoto} onClick={saveAvatar}>{savingPhoto ? 'Saving…' : 'Save Photo'}</button>
+                                </div>
+                                <div className="text-sm text-gray-500">Or paste an image URL</div>
+                                <input value={avatarUrl} onChange={(e)=>setAvatarUrl(e.target.value)} placeholder="https://example.com/pic.jpg" className="input-field w-full" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Bio */}
                           <textarea className="input-field w-full" rows={3} value={editForm.bio} onChange={e=>setEditForm(f=>({...f,bio:e.target.value}))} />
                           <div className="grid sm:grid-cols-2 gap-2">
                             <input className="input-field" placeholder="Facebook URL" value={editForm.socialLinks.facebook||''} onChange={e=>setEditForm(f=>({...f, socialLinks:{...f.socialLinks, facebook:e.target.value}}))} />
