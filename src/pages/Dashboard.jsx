@@ -9,7 +9,12 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState(null);
   const [ratings, setRatings] = useState([]);
-   useEffect(() => {
+  const [adminUser, setAdminUser] = useState(null);
+  const [stars, setStars] = useState(0);
+  const [rated, setRated] = useState(false);
+  const [ratingMsg, setRatingMsg] = useState('');
+ 
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await axios.get('/api/profiles/me');
