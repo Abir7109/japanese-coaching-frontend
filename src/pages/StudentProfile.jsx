@@ -89,7 +89,6 @@ export default function StudentProfile() {
   const isStudent = user?.role === 'student';
   const [compare, setCompare] = useState(false);
   const [rankInfo, setRankInfo] = useState(null);
-  const [settings, setSettings] = useState(null);
   const [adminUser, setAdminUser] = useState(null);
   const isSelf = (user?.id || user?._id) === profile?.user?._id;
   const [editOpen, setEditOpen] = useState(false);
@@ -103,14 +102,12 @@ export default function StudentProfile() {
     let mounted = true;
     (async () => {
       try {
-        const [profRes, setRes, profsRes] = await Promise.all([
+        const [profRes, profsRes] = await Promise.all([
           axios.get(`/api/profiles/user/${id}`),
-          axios.get('/api/settings'),
           axios.get('/api/profiles')
         ]);
         if (mounted) {
           setProfile(profRes.data.profile);
-          setSettings(setRes.data.settings);
           const userList = (profsRes.data.profiles || []).map(p=>p.user).filter(Boolean);
           const adm = userList.find(u=>u.role==='admin') || userList.find(u=>u.role==='teacher') || null;
           setAdminUser(adm);
@@ -175,9 +172,8 @@ export default function StudentProfile() {
     if (lessons >= 10) a.push({ t: '10 Lessons', i: '🚀' });
     if (streak >= 3) a.push({ t: '3-Day Streak', i: '🔥' });
     if (streak >= 7) a.push({ t: '7-Day Streak', i: '⚡' });
-    if (settings && lessons >= settings.currentLesson) a.push({ t: 'On Track with Class', i: '📘' });
     return a.length ? a : [{ t: 'Getting Started', i: '✨' }];
-  }, [profile, settings]);
+  }, [profile]);
 
   const openEdit = () => {
     setEditForm({ bio: profile?.bio || '', socialLinks: { ...(profile?.socialLinks||{}) } });
@@ -263,9 +259,6 @@ export default function StudentProfile() {
                   </div>
                   <div className="text-sm text-gray-500 dark:text-sand/70">{u.email}</div>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    {settings && (
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-aqua text-white">{settings.currentBookNameJa} • Lesson {settings.currentLesson}</span>
-                    )}
                     <span className="px-2 py-0.5 text-xs rounded-full bg-khaki text-night">ID: {u._id?.slice(-6)}</span>
                   </div>
                   <div className="mt-3 text-sm text-gray-700 dark:text-sand/80 italic">“Leading with care and consistency builds a thriving class.”</div>
@@ -364,7 +357,7 @@ export default function StudentProfile() {
                 <div>
                   <h3 className="text-lg font-semibold text-ocean dark:text-sand mb-2">About</h3>
                   <p className="text-gray-600 dark:text-sand/80">{profile.bio || 'No bio added yet.'}</p>
-                  {/* Show class admin card for students */}
+                  {/* Show admin card for students */}
                   {isStudent && adminUser && (
                     <div className="mt-4 p-4 rounded-lg bg-ivory dark:bg-steel flex items-center gap-3">
                       {adminUser?.avatar ? (

@@ -7,7 +7,6 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState(null);
   const [ratings, setRatings] = useState([]);
   const [adminUser, setAdminUser] = useState(null);
   const [stars, setStars] = useState(0);
@@ -25,12 +24,6 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-    const fetchSettings = async () => {
-      try {
-        const res = await axios.get('/api/settings');
-        setSettings(res.data.settings);
-      } catch {}
-    };
     const fetchAdmin = async () => {
       try {
         const res = await axios.get('/api/profiles');
@@ -40,7 +33,6 @@ const Dashboard = () => {
       } catch {}
     };
     fetchProfile();
-    fetchSettings();
     fetchAdmin();
   }, []);
 
@@ -71,7 +63,7 @@ const Dashboard = () => {
             )}
             <div>
               <h1 className="text-3xl font-bold">Welcome back, {user?.name}! 🌸</h1>
-              <p className="text-aqua mt-1">{settings ? `${settings.currentBookNameJa} • Lesson ${settings.currentLesson}` : 'Ready to continue your Japanese learning journey?'}</p>
+              <p className="text-aqua mt-1">Ready to continue your Japanese learning journey?</p>
             </div>
           </div>
         </div>

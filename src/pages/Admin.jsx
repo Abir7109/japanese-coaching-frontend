@@ -13,18 +13,9 @@ const MOTIVATION_QUOTES = [
 const Admin = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState(null);
-  const [settingsId, setSettingsId] = useState(null);
-  const [savingSettings, setSavingSettings] = useState(false);
-  const [saveMessage, setSaveMessage] = useState('');
-  const [saveError, setSaveError] = useState('');
-  // Advanced: allow custom endpoint override (persisted locally)
-  const [customSaveUrl, setCustomSaveUrl] = useState(localStorage.getItem('customSettingsUrl') || '');
-  const [customSaveMethod, setCustomSaveMethod] = useState(localStorage.getItem('customSettingsMethod') || 'put');
 
   useEffect(() => {
     fetchUsers();
-    fetchSettings();
   }, []);
 
   const fetchUsers = async () => {
@@ -38,104 +29,7 @@ const Admin = () => {
     }
   };
 
-  const normalizeSettings = (data) => {
-    if (!data) return null;
-    let s = data.settings ?? data;
-    if (Array.isArray(s)) s = s[0] || {};
-    return {
-      id: s?._id || s?.id || null,
-      currentBookNameJa: s?.currentBookNameJa || s?.currentBookNameJP || s?.bookNameJa || s?.book || 'みんなの日本語',
-      currentLesson: Number(s?.currentLesson ?? s?.lesson ?? 0) || 0,
-    };
-  };
-
-  const fetchSettings = async () => {
-    try {
-      const urls = ['/api/settings','/api/class/settings','/settings','/api/v1/settings'];
-      let ok = null; let lastErr = null;
-      for (const u of urls) {
-        try { const res = await axios.get(u); ok = res; break; } catch (err) { lastErr = err; }
-      }
-      if (!ok) throw lastErr || new Error('Failed to load settings');
-      const norm = normalizeSettings(ok.data);
-      setSettings(norm);
-      setSettingsId(norm?.id || null);
-    } catch (e) {
-      // ignore
-    }
-  };
-
-  const saveSettings = async () => {
-    if (!settings) return;
-    setSavingSettings(true);
-    setSaveMessage('');
-    setSaveError('');
-    const payload = {
-      currentBookNameJa: settings.currentBookNameJa,
-      currentBookNameJP: settings.currentBookNameJa,
-      bookNameJa: settings.currentBookNameJa,
-      currentLesson: Number(settings.currentLesson) || 0,
-    };
-    try {
-      // If admin provides a custom endpoint, try that first (supports :id placeholder)
-      let ok = null; let lastErr = null; let lastUrl = '';
-      const triedList = [];
-      const methods = ['put','patch','post'];
-      const bodies = [
-        payload,
-        { settings: payload },
-        { bookNameJa: payload.currentBookNameJa, currentLesson: payload.currentLesson },
-        { currentBookName: payload.currentBookNameJa, lesson: payload.currentLesson },
-      ];
-      if (customSaveUrl) {
-        const url = (customSaveUrl.includes(':id') && settingsId) ? customSaveUrl.replace(':id', settingsId) : customSaveUrl;
-        const m = (customSaveMethod || 'put').toLowerCase();
-        triedList.push(`${m.toUpperCase()} ${url}`);
-        for (const b of bodies) {
-          try { lastUrl = url; const res = await axios[m](url, b); ok = res; break; } catch (err) { lastErr = err; }
-        }
-      }
-      if (!ok) {
-        const urlCandidates = [
-          settingsId ? `/api/settings/${settingsId}` : null,
-          '/api/settings',
-          settingsId ? `/settings/${settingsId}` : null,
-          '/settings',
-          settingsId ? `/api/v1/settings/${settingsId}` : null,
-          '/api/v1/settings',
-          '/api/admin/settings',
-          '/api/settings/admin',
-        ].filter(Boolean);
-        for (const url of urlCandidates) {
-          for (const method of methods) {
-            for (const body of bodies) {
-              triedList.push(`${method.toUpperCase()} ${url}`);
-              try {
-                lastUrl = url;
-                const res = await axios[method](url, body);
-                ok = res; break;
-              } catch (err) {
-                lastErr = err;
-              }
-            }
-            if (ok) break;
-          }
-          if (ok) break;
-        }
-      }
-      if (!ok) throw lastErr || new Error('Failed');
-      const normalized = normalizeSettings(ok.data);
-      setSettings(normalized);
-      setSettingsId(normalized?.id || settingsId);
-      setSaveMessage('Settings saved');
-    } catch (e) {
-      const tried = e?.response?.config?.url ? ` (${e.response.config.url})` : '';
-      const triedMsg = (typeof window !== 'undefined' && window.__lastTriedSettingsList) ? ` | Tried: ${window.__lastTriedSettingsList}` : '';
-      setSaveError((e.response?.data?.message || e.message || 'Failed to save settings') + tried + triedMsg);
-    } finally {
-      setSavingSettings(false);
-    }
-  };
+  // Class settings feature removed per request
 
   const handleRoleChange = async (userId, newRole) => {
     if (!window.confirm(`Change user role to ${newRole}?`)) {
@@ -199,52 +93,6 @@ const Admin = () => {
         <div className="card mb-8 bg-gradient-to-r from-khaki to-aqua text-night">
           <div className="text-lg font-semibold mb-1">💡 Motivation</div>
           <div className="text-sm">{MOTIVATION_QUOTES[Math.floor(Math.random()*MOTIVATION_QUOTES.length)]}</div>
-        </div>
-
-        {/* Global Settings */}
-        <div className="card mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-ocean">Class Settings</h2>
-            <button onClick={saveSettings} disabled={savingSettings} className="btn-primary">{savingSettings ? 'Saving…' : 'Save'}</button>
-          </div>
-          {saveMessage && (
-            <div className="mb-3 px-3 py-2 rounded bg-green-100 text-green-700 text-sm">{saveMessage}</div>
-          )}
-          {saveError && (
-            <div className="mb-3 px-3 py-2 rounded bg-red-100 text-red-700 text-sm">{saveError}</div>
-          )}
-          <div className="grid md:grid-cols-2 gap-4">
-            <label className="block text-sm text-ocean">Book (日本語)
-              <input className="input-field mt-1" value={settings?.currentBookNameJa || ''} onChange={e=>setSettings(s=>({...s, currentBookNameJa: e.target.value}))} placeholder="みんなの日本語" />
-            </label>
-            <label className="block text-sm text-ocean">Current Lesson
-              <input type="number" min="0" className="input-field mt-1" value={settings?.currentLesson ?? 0} onChange={e=>setSettings(s=>({...s, currentLesson: e.target.value}))} />
-            </label>
-            <div className="text-sm text-gray-500">Students see this on Dashboard and Profile</div>
-          </div>
-          {/* Advanced override */}
-          <details className="mt-4">
-            <summary className="cursor-pointer text-sm text-ocean">Advanced: custom save endpoint</summary>
-            <div className="mt-2 grid md:grid-cols-3 gap-2">
-              <label className="text-sm text-ocean md:col-span-2">URL (supports :id)
-                <input className="input-field mt-1" placeholder="/api/settings/:id" value={customSaveUrl} onChange={e=>{ setCustomSaveUrl(e.target.value); localStorage.setItem('customSettingsUrl', e.target.value); }} />
-              </label>
-              <label className="text-sm text-ocean">Method
-                <select className="input-field mt-1" value={customSaveMethod} onChange={e=>{ setCustomSaveMethod(e.target.value); localStorage.setItem('customSettingsMethod', e.target.value); }}>
-                  <option value="put">PUT</option>
-                  <option value="patch">PATCH</option>
-                  <option value="post">POST</option>
-                </select>
-              </label>
-            </div>
-          </details>
-        </div>
-
-        {/* Preview of what students see */}
-        <div className="card mb-8">
-          <div className="font-semibold text-ocean mb-2">Preview: Student View</div>
-          <div className="text-sm text-gray-700">{settings?.currentBookNameJa || 'みんなの日本語'} • Lesson {settings?.currentLesson ?? 0}</div>
-          <div className="text-xs text-gray-500 mt-1">This appears on the Dashboard header and on student profiles.</div>
         </div>
 
         {/* Stats */}
