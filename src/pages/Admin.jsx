@@ -5,12 +5,9 @@ import AttendanceBoard from '../components/Admin/AttendanceBoard';
 const Admin = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState(null);
-  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     fetchUsers();
-    fetchSettings();
   }, []);
 
   const fetchUsers = async () => {
@@ -21,31 +18,6 @@ const Admin = () => {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchSettings = async () => {
-    try {
-      const res = await axios.get('/api/settings');
-      setSettings(res.data.settings);
-    } catch (e) {
-      console.error('Failed to load settings', e);
-    }
-  };
-
-  const saveSettings = async () => {
-    if (!settings) return;
-    setSavingSettings(true);
-    try {
-      const res = await axios.put('/api/settings', {
-        currentBookNameJa: settings.currentBookNameJa,
-        currentLesson: Number(settings.currentLesson) || 0,
-      });
-      setSettings(res.data.settings);
-    } catch (e) {
-      alert(e.response?.data?.message || 'Failed to save settings');
-    } finally {
-      setSavingSettings(false);
     }
   };
 
@@ -104,26 +76,7 @@ const Admin = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-ocean mb-2">⚙️ Admin Panel</h1>
-          <p className="text-gray-600">Manage users, settings and attendance</p>
-        </div>
-
-        {/* Global Settings */}
-        <div className="card mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-ocean">Global Settings</h2>
-            <button onClick={saveSettings} disabled={savingSettings} className="btn-primary">{savingSettings ? 'Saving…' : 'Save Settings'}</button>
-          </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <label className="block text-sm text-ocean">
-              Book (日本語)
-              <input className="input-field mt-1" value={settings?.currentBookNameJa || ''} onChange={e=>setSettings(s=>({...s, currentBookNameJa: e.target.value}))} placeholder="みんなの日本語" />
-            </label>
-            <label className="block text-sm text-ocean">
-              Current Lesson
-              <input type="number" min="0" className="input-field mt-1" value={settings?.currentLesson ?? 0} onChange={e=>setSettings(s=>({...s, currentLesson: e.target.value}))} />
-            </label>
-            <div className="text-sm text-gray-500">Last updated: {settings?.updatedAt ? new Date(settings.updatedAt).toLocaleString() : '—'}</div>
-          </div>
+          <p className="text-gray-600">Manage users and their roles</p>
         </div>
 
         {/* Stats */}

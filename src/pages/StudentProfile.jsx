@@ -87,23 +87,13 @@ export default function StudentProfile() {
   const isAdmin = user?.role === 'admin';
   const [compare, setCompare] = useState(false);
   const [rankInfo, setRankInfo] = useState(null);
-  const [settings, setSettings] = useState(null);
-  const isSelf = (user?.id || user?._id) === profile?.user?._id;
-  const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ bio: '', socialLinks: { facebook:'', whatsapp:'', instagram:'', twitter:'' } });
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const [profRes, setRes] = await Promise.all([
-          axios.get(`/api/profiles/user/${id}`),
-          axios.get('/api/settings')
-        ]);
-        if (mounted) {
-          setProfile(profRes.data.profile);
-          setSettings(setRes.data.settings);
-        }
+        const res = await axios.get(`/api/profiles/user/${id}`);
+        if (mounted) setProfile(res.data.profile);
       } catch (e) {
         // noop
       } finally {
@@ -132,6 +122,7 @@ export default function StudentProfile() {
   }, [profile]);
 
   const attendance = useMemo(()=>{
+    // Placeholder until real attendance is wired
     const base = profile?.progress?.currentStreak ?? 0;
     return Math.max(50, Math.min(100, 60 + base));
   }, [profile]);
@@ -141,32 +132,6 @@ export default function StudentProfile() {
     const total = 100; // assume 100 lessons target
     return Math.min(100, Math.round((lessons/total)*100));
   }, [profile]);
-
-  const achievements = useMemo(()=>{
-    const a = [];
-    const lessons = profile?.progress?.lessonsCompleted ?? 0;
-    const streak = profile?.progress?.currentStreak ?? 0;
-    if (lessons >= 1) a.push({ t: 'First Lesson Complete', i: '🏅' });
-    if (lessons >= 10) a.push({ t: '10 Lessons', i: '🎯' });
-    if (streak >= 3) a.push({ t: '3-Day Streak', i: '🔥' });
-    if (streak >= 7) a.push({ t: '7-Day Streak', i: '⚡' });
-    if (lessons >= (settings?.currentLesson || 0)) a.push({ t: 'On Track with Class', i: '🚀' });
-    return a.length ? a : [{ t: 'Getting Started', i: '✨' }];
-  }, [profile, settings]);
-
-  const openEdit = () => {
-    setEditForm({ bio: profile?.bio || '', socialLinks: { ...(profile?.socialLinks||{}) } });
-    setEditOpen(true);
-  };
-  const saveEdit = async () => {
-    try {
-      const res = await axios.put('/api/profiles', editForm);
-      setProfile(res.data.profile);
-      setEditOpen(false);
-    } catch (e) {
-      alert(e.response?.data?.message || 'Failed to update profile');
-    }
-  };
 
   if (loading) {
     return (
@@ -211,9 +176,6 @@ export default function StudentProfile() {
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="px-2 py-0.5 text-xs rounded-full bg-ocean text-white">{u.role === 'teacher' ? 'Group Admin' : 'Japanese Learner'}</span>
                   <span className="px-2 py-0.5 text-xs rounded-full bg-khaki text-night">ID: {u._id?.slice(-6)}</span>
-                  {settings && (
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-aqua text-white">{settings.currentBookNameJa} • Lesson {settings.currentLesson}</span>
-                  )}
                 </div>
               </div>
             </div>
@@ -272,29 +234,12 @@ export default function StudentProfile() {
                 <div>
                   <h3 className="text-lg font-semibold text-ocean dark:text-sand mb-2">About</h3>
                   <p className="text-gray-600 dark:text-sand/80">{profile.bio || 'No bio added yet.'}</p>
-                  {isSelf && (
-                    <div className="mt-3">
-                      {!editOpen ? (
-                        <button className="btn-secondary" onClick={openEdit}>Edit your bio & links</button>
-                      ) : (
-                        <div className="space-y-2">
-                          <textarea className="input-field w-full" rows={3} value={editForm.bio} onChange={e=>setEditForm(f=>({...f,bio:e.target.value}))} />
-                          <div className="grid sm:grid-cols-2 gap-2">
-                            <input className="input-field" placeholder="Facebook URL" value={editForm.socialLinks.facebook||''} onChange={e=>setEditForm(f=>({...f, socialLinks:{...f.socialLinks, facebook:e.target.value}}))} />
-                            <input className="input-field" placeholder="WhatsApp number" value={editForm.socialLinks.whatsapp||''} onChange={e=>setEditForm(f=>({...f, socialLinks:{...f.socialLinks, whatsapp:e.target.value}}))} />
-                            <input className="input-field" placeholder="Instagram URL" value={editForm.socialLinks.instagram||''} onChange={e=>setEditForm(f=>({...f, socialLinks:{...f.socialLinks, instagram:e.target.value}}))} />
-                            <input className="input-field" placeholder="Twitter URL" value={editForm.socialLinks.twitter||''} onChange={e=>setEditForm(f=>({...f, socialLinks:{...f.socialLinks, twitter:e.target.value}}))} />
-                          </div>
-                          <div className="flex gap-2">
-                            <button className="btn-primary" onClick={saveEdit}>Save</button>
-                            <button className="btn-secondary" onClick={()=>setEditOpen(false)}>Cancel</button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <h3 className="text-lg font-semibold text-ocean dark:text-sand mt-6 mb-2">Class Settings</h3>
-                  <div className="text-sm text-gray-600 dark:text-sand/80">{settings ? `${settings.currentBookNameJa} • Lesson ${settings.currentLesson}` : '—'}</div>
+                  <h3 className="text-lg font-semibold text-ocean dark:text-sand mt-6 mb-2">Goals</h3>
+                  <ul className="list-disc pl-5 text-gray-600 dark:text-sand/80 space-y-1">
+                    <li>JLPT Level improvement</li>
+                    <li>Daily speaking practice</li>
+                    <li>Consistent attendance</li>
+                  </ul>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-ocean dark:text-sand mb-2">Smart Recommendations</h3>
@@ -328,11 +273,11 @@ export default function StudentProfile() {
 
             {active === 'Achievements' && (
               <div className="grid sm:grid-cols-3 gap-3">
-                {achievements.map((b,idx)=> (
+                {[{t:'Starter Badge'},{t:'Consistency 7d'},{t:'First Kanji!'}].map((b,idx)=> (
                   <div key={idx} className="p-4 rounded-lg bg-ivory dark:bg-steel text-center hover:shadow transition">
-                    <div className="text-3xl mb-2">{b.i}</div>
+                    <div className="text-3xl mb-2">🏅</div>
                     <div className="font-semibold text-ocean dark:text-sand">{b.t}</div>
-                    <div className="text-xs text-gray-500 dark:text-sand/70">Based on your lessons and streak</div>
+                    <div className="text-xs text-gray-500 dark:text-sand/70">Hover to view details</div>
                   </div>
                 ))}
               </div>
