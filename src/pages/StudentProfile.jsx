@@ -289,9 +289,6 @@ export default function StudentProfile() {
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className="px-2 py-0.5 text-xs rounded-full bg-ocean text-white">{u.role === 'teacher' ? 'Group Admin' : 'Japanese Learner'}</span>
                     <span className="px-2 py-0.5 text-xs rounded-full bg-khaki text-night">ID: {u._id?.slice(-6)}</span>
-                    {settings && (
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-aqua text-white">{settings.currentBookNameJa} • Lesson {settings.currentLesson}</span>
-                    )}
                   </div>
                 </div>
               </div>
