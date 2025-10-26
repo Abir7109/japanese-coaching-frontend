@@ -44,15 +44,35 @@ const Admin = () => {
   const saveSettings = async () => {
     if (!settings) return;
     setSavingSettings(true);
+    const payload = {
+      currentBookNameJa: settings.currentBookNameJa,
+      currentBookNameJP: settings.currentBookNameJa,
+      bookNameJa: settings.currentBookNameJa,
+      currentLesson: Number(settings.currentLesson) || 0,
+    };
     try {
-      const res = await axios.put('/api/settings', {
-        currentBookNameJa: settings.currentBookNameJa,
-        currentLesson: Number(settings.currentLesson) || 0,
-      });
-      setSettings(res.data.settings);
+      const urls = [
+        { method: 'put', url: '/api/settings' },
+        { method: 'post', url: '/api/settings' },
+        { method: 'post', url: '/api/settings/update' },
+      ];
+      let ok = null; let lastErr = null;
+      for (const u of urls) {
+        try {
+          const res = await axios[u.method](u.url, payload);
+          ok = res; break;
+        } catch (err) {
+          lastErr = err;
+          if (![404,405].includes(err.response?.status)) {
+            // break on non-route errors
+          }
+        }
+      }
+      if (!ok) throw lastErr || new Error('Failed');
+      setSettings(ok.data.settings || ok.data);
       alert('Settings saved');
     } catch (e) {
-      alert(e.response?.data?.message || 'Failed to save settings');
+      alert(e.response?.data?.message || e.message || 'Failed to save settings');
     } finally {
       setSavingSettings(false);
     }

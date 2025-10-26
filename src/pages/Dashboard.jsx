@@ -127,13 +127,29 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <button disabled={rated || stars===0 || !adminUser} className="btn-primary" onClick={async()=>{
-                    try {
-                      setRatingMsg('');
-                      await axios.post('/api/ratings', { value: stars, rating: stars, targetUserId: adminUser?._id });
-                      setRated(true);
-                      setRatingMsg('Thanks for your feedback!');
-                    } catch (e) {
-                      const msg = e.response?.data?.message || e.message || 'Failed to submit rating';
+                    setRatingMsg('');
+                    const adminId = adminUser?._id;
+                    const urls = ['/api/ratings','/api/ratings/submit','/api/ratings/new','/api/rate'];
+                    const bodies = [
+                      { value: stars, targetUserId: adminId },
+                      { rating: stars, targetUserId: adminId },
+                      { stars, targetUserId: adminId },
+                      { value: stars, to: adminId },
+                      { rating: stars, to: adminId },
+                    ];
+                    let ok = false; let lastErr = null;
+                    for (const u of urls) {
+                      for (const b of bodies) {
+                        try { await axios.post(u, b); ok = true; break; }
+                        catch (e) {
+                          lastErr = e; if (![404,405].includes(e.response?.status)) { /* likely payload error */ }
+                        }
+                      }
+                      if (ok) break;
+                    }
+                    if (ok) { setRated(true); setRatingMsg('Thanks for your feedback!'); }
+                    else {
+                      const msg = lastErr?.response?.data?.message || lastErr?.message || 'Failed to submit rating';
                       setRatingMsg(msg);
                     }
                   }}>{rated ? 'Rated' : 'Submit Rating'}</button>
