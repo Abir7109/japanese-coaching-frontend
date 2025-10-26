@@ -94,6 +94,8 @@ const Admin = () => {
       let ok = null; let lastErr = null; let lastUrl = '';
       const triedList = [];
       for (const url of urlCandidates) {
+        // keep a breadcrumb list globally for debugging
+        if (typeof window !== 'undefined') window.__lastTriedSettingsList = triedList.join(', ');
         for (const method of methods) {
           for (const body of bodies) {
             triedList.push(`${method.toUpperCase()} ${url}`);
@@ -116,7 +118,8 @@ const Admin = () => {
       setSaveMessage('Settings saved');
     } catch (e) {
       const tried = e?.response?.config?.url ? ` (${e.response.config.url})` : '';
-      setSaveError((e.response?.data?.message || e.message || 'Failed to save settings') + tried + `${typeof triedList!== 'undefined' && triedList.length ? ` | Tried: ${triedList.join(', ')}` : ''}`);
+      const triedMsg = (typeof window !== 'undefined' && window.__lastTriedSettingsList) ? ` | Tried: ${window.__lastTriedSettingsList}` : '';
+      setSaveError((e.response?.data?.message || e.message || 'Failed to save settings') + tried + triedMsg);
     } finally {
       setSavingSettings(false);
     }
