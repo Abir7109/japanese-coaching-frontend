@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/japanese-coaching-frontend/static/css/main.0fd98d3e.css",
-    "main.js": "/japanese-coaching-frontend/static/js/main.9634b027.js",
+    "main.js": "/japanese-coaching-frontend/static/js/main.978f3e7e.js",
     "static/js/453.d7446e4a.chunk.js": "/japanese-coaching-frontend/static/js/453.d7446e4a.chunk.js",
     "index.html": "/japanese-coaching-frontend/index.html",
     "main.0fd98d3e.css.map": "/japanese-coaching-frontend/static/css/main.0fd98d3e.css.map",
-    "main.9634b027.js.map": "/japanese-coaching-frontend/static/js/main.9634b027.js.map",
+    "main.978f3e7e.js.map": "/japanese-coaching-frontend/static/js/main.978f3e7e.js.map",
     "453.d7446e4a.chunk.js.map": "/japanese-coaching-frontend/static/js/453.d7446e4a.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.0fd98d3e.css",
-    "static/js/main.9634b027.js"
+    "static/js/main.978f3e7e.js"
   ]
 }
