@@ -105,7 +105,15 @@ export default function StudentProfile() {
           setSettings(setRes.data.settings);
         }
       } catch (e) {
-        // noop
+        // If viewing own profile and it doesn't exist yet, create it with defaults
+        const meId = (user?.id || user?._id);
+        if (meId && String(meId) === String(id) && (e.response?.status === 404)) {
+          try {
+            await axios.put('/api/profiles', {});
+            const profRes2 = await axios.get(`/api/profiles/user/${id}`);
+            if (mounted) setProfile(profRes2.data.profile);
+          } catch (_) { /* ignore */ }
+        }
       } finally {
         if (mounted) setLoading(false);
       }
