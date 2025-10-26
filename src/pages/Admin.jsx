@@ -37,11 +37,12 @@ const Admin = () => {
 
   const normalizeSettings = (data) => {
     if (!data) return null;
-    const s = data.settings || data;
+    let s = data.settings ?? data;
+    if (Array.isArray(s)) s = s[0] || {};
     return {
-      id: s._id || s.id || null,
-      currentBookNameJa: s.currentBookNameJa || s.currentBookNameJP || s.bookNameJa || s.book || 'みんなの日本語',
-      currentLesson: Number(s.currentLesson ?? s.lesson ?? 0) || 0,
+      id: s?._id || s?.id || null,
+      currentBookNameJa: s?.currentBookNameJa || s?.currentBookNameJP || s?.bookNameJa || s?.book || 'みんなの日本語',
+      currentLesson: Number(s?.currentLesson ?? s?.lesson ?? 0) || 0,
     };
   };
 
@@ -74,15 +75,14 @@ const Admin = () => {
     };
     try {
       const urlCandidates = [
-        '/api/settings',
         settingsId ? `/api/settings/${settingsId}` : null,
-        '/settings',
+        '/api/settings',
         settingsId ? `/settings/${settingsId}` : null,
-        '/api/v1/settings',
+        '/settings',
         settingsId ? `/api/v1/settings/${settingsId}` : null,
+        '/api/v1/settings',
         '/api/admin/settings',
         '/api/settings/admin',
-        '/api/class/settings',
       ].filter(Boolean);
       const methods = ['put','patch','post'];
       const bodies = [
