@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import NoticeItem from './NoticeItem';
@@ -15,11 +15,7 @@ const NoticeBoard = () => {
 
   const [prevIds, setPrevIds] = useState([]);
 
-  useEffect(() => {
-    fetchNotices();
-  }, []);
-
-  const fetchNotices = async () => {
+  const fetchNotices = useCallback(async () => {
     try {
       const res = await axios.get('/api/notices');
       const list = res.data.notices || [];
@@ -40,7 +36,11 @@ const NoticeBoard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [prevIds]);
+
+  useEffect(() => {
+    fetchNotices();
+  }, [fetchNotices]);
 
   const handleNoticeCreated = () => {
     setShowCreateForm(false);
