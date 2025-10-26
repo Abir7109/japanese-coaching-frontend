@@ -303,7 +303,7 @@ export default function StudentProfile() {
                 </div>
               </div>
             </div>
-          )
+          )}
 
           {/* Quick Stats */}
           <div className="card">
