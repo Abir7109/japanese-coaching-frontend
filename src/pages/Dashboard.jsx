@@ -33,8 +33,8 @@ const Dashboard = () => {
     };
     const fetchAdmin = async () => {
       try {
-        const res = await axios.get('/api/users');
-        const list = res.data.users || [];
+        const res = await axios.get('/api/profiles');
+        const list = (res.data.profiles || []).map(p=>p.user).filter(Boolean);
         const adm = list.find(u=>u.role==='admin') || list.find(u=>u.role==='teacher') || null;
         setAdminUser(adm);
       } catch {}

@@ -103,16 +103,16 @@ export default function StudentProfile() {
     let mounted = true;
     (async () => {
       try {
-        const [profRes, setRes, usersRes] = await Promise.all([
+        const [profRes, setRes, profsRes] = await Promise.all([
           axios.get(`/api/profiles/user/${id}`),
           axios.get('/api/settings'),
-          axios.get('/api/users')
+          axios.get('/api/profiles')
         ]);
         if (mounted) {
           setProfile(profRes.data.profile);
           setSettings(setRes.data.settings);
-          const list = usersRes.data.users || [];
-          const adm = list.find(u=>u.role==='admin') || list.find(u=>u.role==='teacher') || null;
+          const userList = (profsRes.data.profiles || []).map(p=>p.user).filter(Boolean);
+          const adm = userList.find(u=>u.role==='admin') || userList.find(u=>u.role==='teacher') || null;
           setAdminUser(adm);
         }
       } catch (e) {
@@ -242,32 +242,68 @@ export default function StudentProfile() {
         {/* Top grid: profile card + quick stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Profile Card */}
-          <div className="card relative overflow-hidden">
-            <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-aqua/20 blur-2xl" />
-            <div className="flex items-center gap-5">
-              <div className="relative group">
-                {u.avatar ? (
-                  <img src={u.avatar} alt={u.name} className="w-24 h-24 rounded-2xl object-cover transform transition-all duration-300 group-hover:scale-105" />
-                ) : (
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-aqua to-teal text-white flex items-center justify-center text-3xl font-bold">
-                    {u.name?.charAt(0)?.toUpperCase()}
-                  </div>
-                )}
-                <span className="absolute -bottom-2 -right-2 px-2 py-0.5 text-xs rounded-full bg-teal text-white shadow">Active</span>
-              </div>
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold text-ocean dark:text-sand">{u.name}</h1>
-                <div className="text-sm text-gray-500 dark:text-sand/70">{u.email}</div>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-ocean text-white">{u.role === 'teacher' ? 'Group Admin' : 'Japanese Learner'}</span>
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-khaki text-night">ID: {u._id?.slice(-6)}</span>
-                  {settings && (
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-aqua text-white">{settings.currentBookNameJa} • Lesson {settings.currentLesson}</span>
+          {viewedIsAdmin && isStudent ? (
+            <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-aqua/20 to-khaki/20 border border-aqua/30">
+              <div className="absolute -top-20 -right-20 w-72 h-72 bg-aqua/20 rounded-full blur-3xl" />
+              <div className="flex items-center gap-5 relative">
+                <div className="relative">
+                  {u.avatar ? (
+                    <img src={u.avatar} alt={u.name} className="w-24 h-24 rounded-2xl object-cover ring-2 ring-aqua" />
+                  ) : (
+                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-aqua to-teal text-white flex items-center justify-center text-3xl font-bold ring-2 ring-aqua">
+                      {u.name?.charAt(0)?.toUpperCase()}
+                    </div>
                   )}
+                  <span className="absolute -bottom-2 -right-2 px-2 py-0.5 text-xs rounded-full bg-teal text-white shadow">Admin</span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-extrabold text-ocean dark:text-sand">{u.name}</h1>
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-ocean text-white">Class Admin</span>
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-sand/70">{u.email}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {settings && (
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-aqua text-white">{settings.currentBookNameJa} • Lesson {settings.currentLesson}</span>
+                    )}
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-khaki text-night">ID: {u._id?.slice(-6)}</span>
+                  </div>
+                  <div className="mt-3 text-sm text-gray-700 dark:text-sand/80 italic">“Leading with care and consistency builds a thriving class.”</div>
+                  <div className="mt-3 flex gap-2">
+                    <button className="btn-secondary">Message Admin</button>
+                    <a href="/admin" className="btn-primary">View Class Panel</a>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="card relative overflow-hidden">
+              <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-aqua/20 blur-2xl" />
+              <div className="flex items-center gap-5">
+                <div className="relative group">
+                  {u.avatar ? (
+                    <img src={u.avatar} alt={u.name} className="w-24 h-24 rounded-2xl object-cover transform transition-all duration-300 group-hover:scale-105" />
+                  ) : (
+                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-aqua to-teal text-white flex items-center justify-center text-3xl font-bold">
+                      {u.name?.charAt(0)?.toUpperCase()}
+                    </div>
+                  )}
+                  <span className="absolute -bottom-2 -right-2 px-2 py-0.5 text-xs rounded-full bg-teal text-white shadow">Active</span>
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-ocean dark:text-sand">{u.name}</h1>
+                  <div className="text-sm text-gray-500 dark:text-sand/70">{u.email}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-ocean text-white">{u.role === 'teacher' ? 'Group Admin' : 'Japanese Learner'}</span>
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-khaki text-night">ID: {u._id?.slice(-6)}</span>
+                    {settings && (
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-aqua text-white">{settings.currentBookNameJa} • Lesson {settings.currentLesson}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
 
           {/* Quick Stats */}
           <div className="card">
