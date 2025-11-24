@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from '../../utils/axios';
 
 export default function ForgotPassword() {
@@ -59,7 +60,7 @@ export default function ForgotPassword() {
 
           {/* Footer */}
           <div className="mt-6 text-center">
-            <a href="#/login" className="text-teal hover:text-ocean font-semibold">Back to sign in</a>
+            <Link to="/login" className="text-teal hover:text-ocean font-semibold">Back to sign in</Link>
           </div>
         </div>
       </div>

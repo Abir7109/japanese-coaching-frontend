@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import NoticeBoard from '../components/NoticeBoard/NoticeBoard';
 import axios from 'axios';
@@ -13,6 +13,8 @@ const Dashboard = () => {
   const [rated, setRated] = useState(false);
   const [ratingMsg, setRatingMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const todayKey = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const ratingCacheKey = user?.id ? `rating:last:${user.id}` : null;
  
   useEffect(() => {
     const fetchProfile = async () => {
@@ -38,6 +40,12 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    if (!ratingCacheKey) return;
+    const cached = localStorage.getItem(ratingCacheKey);
+    setRated(cached === todayKey);
+  }, [ratingCacheKey, todayKey]);
+
+  useEffect(() => {
     if (!user || (user.role !== 'admin' && user.role !== 'teacher')) return;
     (async () => {
       try {
@@ -48,6 +56,24 @@ const Dashboard = () => {
   }, [user]);
 
   const avgRating = ratings.length ? (ratings.reduce((s,r)=>s+r.value,0)/ratings.length).toFixed(2) : '—';
+  const handleSubmitRating = async () => {
+    if (submitting || rated || stars === 0) return;
+    setSubmitting(true);
+    setRatingMsg('');
+    try {
+      await axios.post('/api/ratings/rate', { value: stars });
+      setRated(true);
+      if (ratingCacheKey) {
+        localStorage.setItem(ratingCacheKey, todayKey);
+      }
+      setRatingMsg('Thanks for your feedback!');
+    } catch (e) {
+      const msg = e.response?.data?.message || e.message || 'Failed to submit rating';
+      setRatingMsg(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-ivory dark:bg-night py-12">
@@ -119,37 +145,13 @@ const Dashboard = () => {
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button disabled={submitting || rated || stars===0} className="btn-primary" onClick={async()=>{
-                    setRatingMsg(''); setSubmitting(true);
-                    try {
-                      // use cached working endpoint if present
-                      const cachedUrl = localStorage.getItem('ratingsEndpoint');
-                      const cachedKey = localStorage.getItem('ratingsKey') || 'value';
-                      const body = { [cachedKey]: stars };
-                      if (cachedUrl) {
-                        await axios.post(cachedUrl, body);
-                        setRated(true); setRatingMsg('Thanks for your feedback!'); setSubmitting(false); return;
-                      }
-                      const urls = ['/api/ratings','/ratings','/api/rating','/rating','/api/rate','/rate'];
-                      const keys = ['value','rating','stars'];
-                      let ok=false, lastErr=null, usedUrl='';
-                      for (const u of urls) {
-                        for (const k of keys) {
-                          try {
-                            usedUrl=u; const b={ [k]: stars };
-                            await axios.post(u, b);
-                            ok=true; localStorage.setItem('ratingsEndpoint', u); localStorage.setItem('ratingsKey', k); break;
-                          } catch (e) { lastErr=e; }
-                        }
-                        if (ok) break;
-                      }
-                      if (!ok) throw lastErr || new Error('Rating endpoint not found');
-                      setRated(true); setRatingMsg('Thanks for your feedback!');
-                    } catch (e) {
-                      const msg = (e.response?.data?.message || e.message || 'Failed to submit rating');
-                      setRatingMsg(msg);
-                    } finally { setSubmitting(false); }
-                  }}>{submitting ? 'Submitting…' : rated ? 'Rated' : 'Submit Rating'}</button>
+                  <button
+                    disabled={submitting || rated || stars===0}
+                    className="btn-primary"
+                    onClick={handleSubmitRating}
+                  >
+                    {submitting ? 'Submitting…' : rated ? 'Rated' : 'Submit Rating'}
+                  </button>
                   {ratingMsg && <span className="text-sm text-gray-600">{ratingMsg}</span>}
                 </div>
                 <div className="text-xs text-gray-500 mt-2">Anonymous, one rating per day.</div>

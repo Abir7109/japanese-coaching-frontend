@@ -1,7 +1,6 @@
-# https://abir7109.github.io/japanese-coaching-frontend/
-# Getting Started with Create React App
+# Frontend (Vercel Ready CRA)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This React app is built with Create React App and is pre-configured to deploy on **Vercel** with a backend hosted on **Render**.
 
 ## Available Scripts
 
@@ -22,13 +21,22 @@ See the section about [running tests](https://facebook.github.io/create-react-ap
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Builds the production bundle inside `build/`. The output is what Vercel serves.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Deployment (Vercel)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Add `.env.production` (not committed) with:
+   ```
+   REACT_APP_API_URL=https://your-render-api.onrender.com
+   ```
+2. Push the `frontend` folder to GitHub.
+3. Import the repo in Vercel → Framework preset **Create React App**
+4. Root directory: `frontend`
+5. Build command: `npm run build`
+6. Output directory: `build`
+7. Set the same `REACT_APP_API_URL` environment variable in Vercel.
+
+After every push, Vercel will rebuild automatically.
 
 ### `npm run eject`
 
